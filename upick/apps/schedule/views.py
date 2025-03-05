@@ -17,8 +17,8 @@ from datetime import datetime, timedelta
 from django.db.models import Q
 from django.contrib.auth.models import Group
 from .models import PlantingSchedule, GardenBed
-from plants.models import Plant, Variety
-from planning.models import GardenPlan
+from apps.plants.models import Plant, Variety
+from apps.planning.models import GardenPlan
 
 def get_user_group(request):
     """Get the user's active group or return None if user has no groups.

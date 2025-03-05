@@ -32,7 +32,7 @@ class Beneficial(models.Model):
     active_from_month = models.IntegerField(
         choices=MONTH_CHOICES,
         validators=[MinValueValidator(1), MaxValueValidator(12)],
-        help_text='Month when the beneficial typically becomes active'
+        help_text='Month when the beneficial typically becomes active.'
     )
     active_to_month = models.IntegerField(
         choices=MONTH_CHOICES,

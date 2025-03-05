@@ -6,11 +6,11 @@ from django.utils import timezone
 from django.contrib.auth.models import Group
 from .models import LogEntry
 from django.db.models import Q
-from plants.models import Plant
-from beneficials.models import Beneficial
-from planning.models import GardenPlan, SeedSource
-from foliarrecipes.models import FoliarRecipe
-from schedule.models import GardenBed
+from apps.plants.models import Plant
+from apps.beneficials.models import Beneficial
+from apps.planning.models import GardenPlan, SeedSource
+from apps.foliarrecipes.models import FoliarRecipe
+from apps.schedule.models import GardenBed
 from datetime import date
 
 def get_user_group(request):

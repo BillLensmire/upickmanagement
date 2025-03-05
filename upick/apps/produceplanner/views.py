@@ -9,8 +9,8 @@ from django.contrib import messages
 from django.contrib.auth.models import Group
 from datetime import timedelta, datetime
 from .models import ProducePlanOverview, ProducePlan, Plant
-from plants.models import Plant, Variety
-from planning.models import GardenConfiguration, GardenPlan
+from apps.plants.models import Plant, Variety
+from apps.planning.models import GardenConfiguration, GardenPlan
 from .forms import ProducePlanOverviewForm
 
 def get_user_group(request):
