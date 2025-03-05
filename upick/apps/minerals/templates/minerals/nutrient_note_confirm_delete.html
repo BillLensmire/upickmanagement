@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Delete Note{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'minerals:nutrient_note_list' %}">Nutrient Notes</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Delete Note</li>
+        </ol>
+    </nav>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0"><i class="fas fa-trash me-2"></i>Delete Nutrient Note</h5>
+        </div>
+        <div class="card-body">
+            <p class="lead">Are you sure you want to delete the note "{{ object.title }}"?</p>
+            
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                This action cannot be undone. All information in this note will be permanently deleted.
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Note Details</h5>
+                    <p><strong>Title:</strong> {{ object.title }}</p>
+                    
+                    {% if object.nutrient %}
+                    <p>
+                        <strong>Related Nutrient:</strong> 
+                        <span class="badge bg-success">{{ object.nutrient.name }}</span>
+                    </p>
+                    {% endif %}
+                    
+                    {% if object.source %}
+                    <p><strong>Source:</strong> {{ object.source }}</p>
+                    {% endif %}
+                    
+                    <p><strong>Created:</strong> {{ object.created_at|date:"F j, Y" }}</p>
+                    
+                    {% if object.content|length > 100 %}
+                    <p><strong>Content Preview:</strong> {{ object.content|truncatechars:100 }}</p>
+                    {% else %}
+                    <p><strong>Content:</strong> {{ object.content }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-flex justify-content-end">
+                    <a href="{% url 'minerals:nutrient_note_detail' object.pk %}" class="btn btn-secondary me-2">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Delete
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

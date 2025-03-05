@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Delete Plant Requirement{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'minerals:plant_requirement_list' %}">Plant Requirements</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Delete Plant Requirement</li>
+        </ol>
+    </nav>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0"><i class="fas fa-trash me-2"></i>Delete Plant Requirement</h5>
+        </div>
+        <div class="card-body">
+            <p class="lead">Are you sure you want to delete the plant requirement for "{{ object.plant_type }}" and nutrient "{{ object.nutrient.name }}"?</p>
+            
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                This action cannot be undone. All information related to this plant nutrient requirement will be permanently deleted.
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Plant Requirement Details</h5>
+                    <p><strong>Plant Type:</strong> {{ object.plant_type }}</p>
+                    <p><strong>Nutrient:</strong> {{ object.nutrient.name }}</p>
+                    <p>
+                        <strong>Requirement Level:</strong> 
+                        <span class="badge {% if object.requirement_level == 'low' %}bg-success{% elif object.requirement_level == 'medium' %}bg-warning{% elif object.requirement_level == 'high' %}bg-danger{% else %}bg-info{% endif %}">
+                            {{ object.get_requirement_level_display }}
+                        </span>
+                    </p>
+                    {% if object.critical_points_of_influence %}
+                    <p><strong>Critical Point:</strong> {{ object.get_critical_points_of_influence_display }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-flex justify-content-end">
+                    <a href="{% url 'minerals:plant_requirement_detail' object.pk %}" class="btn btn-secondary me-2">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Delete
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

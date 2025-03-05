@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Delete {{ supplier.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'foliarrecipes:supplier_list' %}">Suppliers</a></li>
+            <li class="breadcrumb-item active">Delete {{ supplier.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h1 class="card-title text-center mb-4">Delete Supplier</h1>
+                    
+                    <div class="alert alert-danger">
+                        <p class="mb-0">
+                            Are you sure you want to delete the supplier "{{ supplier.name }}"?
+                            This action cannot be undone.
+                        </p>
+                        {% if supplier.mineral_products.exists or supplier.chelating_products.exists %}
+                        <hr>
+                        <p class="mb-0">
+                            <strong>Warning:</strong> This supplier has associated products that will also be deleted:
+                            <ul class="mb-0">
+                                {% if supplier.mineral_products.exists %}
+                                <li>{{ supplier.mineral_products.count }} mineral product{{ supplier.mineral_products.count|pluralize }}</li>
+                                {% endif %}
+                                {% if supplier.chelating_products.exists %}
+                                <li>{{ supplier.chelating_products.count }} chelating product{{ supplier.chelating_products.count|pluralize }}</li>
+                                {% endif %}
+                            </ul>
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'foliarrecipes:supplier_detail' supplier.pk %}" 
+                               class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

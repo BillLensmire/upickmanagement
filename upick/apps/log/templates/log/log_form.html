@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% load static %}
+{% load page_tags %}
+{% with page_app='log' page_name='beneficials' page_action='list' %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'log:log_list' %}">Garden Log</a></li>
+            <li class="breadcrumb-item active">{% if log_entry %}Edit{% else %}New{% endif %} Log Entry</li>
+        </ol>
+    </nav>
+
+    <div class="card">
+        <div class="card-body">
+            <h1 class="h2 mb-4">{% if log_entry %}Edit{% else %}New{% endif %} Log Entry</h1>
+
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" role="alert">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <form method="post" class="needs-validation" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="entry_type" class="form-label">Entry Type*</label>
+                    <select name="entry_type" id="entry_type" class="form-select" required>
+                        <option value="">Select an entry type...</option>
+                        {% for type_code, type_name in entry_types %}
+                        <option value="{{ type_code }}" {% if log_entry.entry_type == type_code %}selected{% endif %}>
+                            {{ type_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">
+                        Please select an entry type.
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="title" class="form-label">Title*</label>
+                    <input type="text" class="form-control" id="title" name="title" 
+                           value="{{ log_entry.title|default:'' }}" required>
+                    <div class="invalid-feedback">
+                        Please provide a title.
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Notes (<a href="{% url 'help:markdown_latex_help' %}" target="_blank" rel="noopener">Supports Markdown</a>)*</label>
+                    <textarea class="form-control" id="description" name="description" 
+                              rows="20" required>{{ log_entry.description|default:'' }}</textarea>
+                    <div class="invalid-feedback">
+                        Please provide a note.
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="photo" class="form-label">Photo</label>
+                    <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
+                    {% if log_entry.photo %}
+                    <div class="mt-2">
+                        <img src="{{ log_entry.photo.url }}" alt="Current photo" class="img-thumbnail" style="max-height: 200px">
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="document" class="form-label">Document</label>
+                    <input type="file" class="form-control" id="document" name="document">
+                    {% if log_entry.document %}
+                    <div class="mt-2">
+                        <a href="{{ log_entry.document.url }}" target="_blank">Current document</a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="plants" class="form-label">Related Plants</label>
+                    <select class="form-select" id="plants" name="plants" multiple>
+                        {% for plant in plants %}
+                        <option value="{{ plant.id }}" {% if plant in log_entry.plants.all %}selected{% endif %}>{{ plant.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="plant_schedule" class="form-label">Plant Schedule</label>
+                    <select class="form-select" id="plant_schedule" name="plant_schedule">
+                        <option value="">Select a plant schedule...</option>
+                        {% for schedule in garden_plans %}
+                        <option value="{{ schedule.id }}" {% if log_entry.plant_schedule_id == schedule.id %}selected{% endif %}>{{ schedule.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="foliar_recipe" class="form-label">Foliar Recipe</label>
+                    <select class="form-select" id="foliar_recipe" name="foliar_recipe">
+                        <option value="">Select a foliar recipe...</option>
+                        {% for recipe in foliar_recipes %}
+                        <option value="{{ recipe.id }}" {% if log_entry.foliar_recipe_id == recipe.id %}selected{% endif %}>{{ recipe.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="cover_crop" class="form-label">Cover Crop</label>
+                    <select class="form-select" id="cover_crop" name="cover_crop">
+                        <option value="">Select a cover crop...</option>
+                        {% for crop in cover_crops %}
+                        <option value="{{ crop.id }}" {% if log_entry.cover_crop_id == crop.id %}selected{% endif %}>{{ crop.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="beneficial" class="form-label">Beneficial Organism</label>
+                    <select class="form-select" id="beneficial" name="beneficial">
+                        <option value="">Select a beneficial organism...</option>
+                        {% for org in beneficials %}
+                        <option value="{{ org.id }}" {% if log_entry.beneficial_id == org.id %}selected{% endif %}>{{ org.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="garden_bed" class="form-label">Garden Bed</label>
+                    <select class="form-select" id="garden_bed" name="garden_bed">
+                        <option value="">Select a garden bed...</option>
+                        {% for bed in garden_beds %}
+                        <option value="{{ bed.id }}" {% if log_entry.garden_bed_id == bed.id %}selected{% endif %}>{{ bed.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="seed_source" class="form-label">Seed Source</label>
+                    <select class="form-select" id="seed_source" name="seed_source">
+                        <option value="">Select a seed source...</option>
+                        {% for source in seed_sources %}
+                        <option value="{{ source.id }}" {% if log_entry.seed_source_id == source.id %}selected{% endif %}>{{ source.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="{% if log_entry %}{% url 'log:log_detail' pk=log_entry.pk %}{% else %}{% url 'log:log_list' %}{% endif %}" 
+                       class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        {% if log_entry %}Save Changes{% else %}Create Entry{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// Form validation
+(function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+            form.classList.add('was-validated')
+        }, false)
+    })
+})()
+
+</script>
+{% endblock %}
+{% endblock %}
+{% endwith %}

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}{{ mineralraw.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ mineralraw.name }}</h1>
+        <div class="btn-group" role="group">
+            <a href="{% url 'foliarrecipes:mineralraw_edit' mineralraw.pk %}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            <a href="{% url 'foliarrecipes:mineralraw_delete' mineralraw.pk %}" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Delete
+            </a>
+            <a href="{% url 'foliarrecipes:mineralraw_list' %}" class="btn btn-secondary">
+                <i class="fas fa-list"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="card-title">Basic Information</h5>
+                    <dl class="row">
+                        <dt class="col-sm-4">Primary Mineral</dt>
+                        <dd class="col-sm-8">{{ mineralraw.mineral }}</dd>
+
+                        <dt class="col-sm-4">Form</dt>
+                        <dd class="col-sm-8">{{ mineralraw.get_form_display }}</dd>
+
+                        <dt class="col-sm-4">Chemical Formula</dt>
+                        <dd class="col-sm-8">{{ mineralraw.chemical_formula|default:"Not specified" }}</dd>
+
+                        <dt class="col-sm-4">Mineral Content</dt>
+                        <dd class="col-sm-8">{{ mineralraw.mineral_content }}%</dd>
+                    </dl>
+                </div>
+
+                <div class="col-md-6">
+                    <h5 class="card-title">Technical Details</h5>
+                    <dl class="row">
+                        <dt class="col-sm-4">Solubility</dt>
+                        <dd class="col-sm-8">{{ mineralraw.solubility }} g/L at 20°C</dd>
+
+                        <dt class="col-sm-4">pH Range</dt>
+                        <dd class="col-sm-8">{{ mineralraw.ph_range }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            {% if mineralraw.notes %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h5 class="card-title">Notes</h5>
+                    <p class="card-text">{{ mineralraw.notes|linebreaks }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if mineralraw.supplier_products.exists %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h5 class="card-title">Available From Suppliers</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Supplier</th>
+                                    <th>Package Size</th>
+                                    <th>Price</th>
+                                    <th>Product Code</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in mineralraw.supplier_products.all %}
+                                <tr>
+                                    <td>{{ product.supplier.name }}</td>
+                                    <td>{{ product.package_size }} {{ product.package_unit }}</td>
+                                    <td>${{ product.price }}</td>
+                                    <td>{{ product.product_code|default:"N/A" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

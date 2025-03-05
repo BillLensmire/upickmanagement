@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% load static %}
+{% load page_tags %}
+{% with page_app='foliarrecipes' page_name='chelatingagent' page_action='form' %}
+
+{% block title %}
+    {% if object %}Edit {{ object.name }}{% else %}Add New Chelating Agent{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'foliarrecipes:chelatingagent_list' %}">Chelating Agents</a></li>
+            <li class="breadcrumb-item active">{% if object %}Edit {{ object.name }}{% else %}New Chelating Agent{% endif %}</li>
+        </ol>
+    </nav>
+
+    <div class="card">
+        <div class="card-body">
+            <h1 class="h2 mb-4">{% if object %}Edit {{ object.name }}{% else %}New Chelating Agent{% endif %}</h1>
+
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" role="alert">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name*</label>
+                            <input type="text" class="form-control {% if form.name.errors %}is-invalid{% endif %}" 
+                                   id="name" name="name" value="{{ form.name.value|default:'' }}" required
+                                   placeholder="e.g., Citric Acid">
+                            {% if form.name.errors %}
+                            <div class="invalid-feedback">{{ form.name.errors|join:', ' }}</div>
+                            {% endif %}
+                            <div class="form-text">Name of the chelating agent (e.g., Citric Acid)</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="form" class="form-label">Form*</label>
+                            <select class="form-select {% if form.form.errors %}is-invalid{% endif %}" 
+                                    id="form" name="form" required>
+                                <option value="">Select a form...</option>
+                                {% for value, label in form.fields.form.choices %}
+                                <option value="{{ value }}" {% if form.form.value == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            {% if form.form.errors %}
+                            <div class="invalid-feedback">{{ form.form.errors|join:', ' }}</div>
+                            {% endif %}
+                            <div class="form-text">Physical form of the chelating agent</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="chemical_formula" class="form-label">Chemical Formula</label>
+                            <input type="text" class="form-control {% if form.chemical_formula.errors %}is-invalid{% endif %}" 
+                                   id="chemical_formula" name="chemical_formula" value="{{ form.chemical_formula.value|default:'' }}"
+                                   placeholder="e.g., C6H8O7">
+                            {% if form.chemical_formula.errors %}
+                            <div class="invalid-feedback">{{ form.chemical_formula.errors|join:', ' }}</div>
+                            {% endif %}
+                            <div class="form-text">Chemical formula of the chelating agent</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="optimal_ph_range" class="form-label">Optimal pH Range*</label>
+                            <input type="text" class="form-control {% if form.optimal_ph_range.errors %}is-invalid{% endif %}" 
+                                   id="optimal_ph_range" name="optimal_ph_range" value="{{ form.optimal_ph_range.value|default:'' }}" required
+                                   placeholder="e.g., 4.0-6.5">
+                            {% if form.optimal_ph_range.errors %}
+                            <div class="invalid-feedback">{{ form.optimal_ph_range.errors|join:', ' }}</div>
+                            {% endif %}
+                            <div class="form-text">Optimal pH range for chelation</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="solubility" class="form-label">Solubility*</label>
+                            <input type="number" step="0.01" class="form-control {% if form.solubility.errors %}is-invalid{% endif %}" 
+                                   id="solubility" name="solubility" value="{{ form.solubility.value|default:'' }}" required>
+                            {% if form.solubility.errors %}
+                            <div class="invalid-feedback">{{ form.solubility.errors|join:', ' }}</div>
+                            {% endif %}
+                            <div class="form-text">Solubility in g/L at 20°C</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="stability_notes" class="form-label">Stability Notes</label>
+                            <textarea class="form-control {% if form.stability_notes.errors %}is-invalid{% endif %}" 
+                                      id="stability_notes" name="stability_notes" rows="3">{{ form.stability_notes.value|default:'' }}</textarea>
+                            {% if form.stability_notes.errors %}
+                            <div class="invalid-feedback">{{ form.stability_notes.errors|join:', ' }}</div>
+                            {% endif %}
+                            <div class="form-text">Notes about stability with different minerals</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="notes" class="form-label">Additional Notes</label>
+                    <textarea class="form-control {% if form.notes.errors %}is-invalid{% endif %}" 
+                              id="notes" name="notes" rows="3">{{ form.notes.value|default:'' }}</textarea>
+                    {% if form.notes.errors %}
+                    <div class="invalid-feedback">{{ form.notes.errors|join:', ' }}</div>
+                    {% endif %}
+                    <div class="form-text">Any additional information about this chelating agent</div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'foliarrecipes:chelatingagent_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {% if object %}Update{% else %}Create{% endif %} Chelating Agent
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// Form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        // Fetch all the forms we want to apply custom Bootstrap validation styles to
+        var forms = document.getElementsByClassName('needs-validation');
+        // Loop over them and prevent submission
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+</script>
+{% endblock %}
+
+{% endblock %}
+{% endwith %}

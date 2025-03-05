@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load schedule_extras %}
+
+{% block title %}Garden Beds - You Pick Manager{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Garden Beds</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'schedule:garden_bed_create' %}{% if selected_year %}?year={{ selected_year }}{% endif %}" class="btn btn-success">
+                <i class="fas fa-plus"></i> New Garden Bed
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <form method="get" class="form-inline">
+                <div class="input-group">
+                    <label class="input-group-text" for="yearSelect">Year</label>
+                    <select class="form-select" id="yearSelect" name="year" onchange="this.form.submit()">
+                        <option value="">All Years</option>
+                        <option value="{{ current_year }}"{% if selected_year == current_year %} selected{% endif %}>{{ current_year }} (Current)</option>
+                        {% for year in available_years %}
+                            {% if year != current_year %}
+                                <option value="{{ year }}"{% if selected_year == year %} selected{% endif %}>{{ year }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Year</th>
+                    <th>Size</th>
+                    <th>Area (sq ft)</th>
+                    <th>Current Plants</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bed in garden_beds %}
+                <tr>
+                    <td>
+                        <strong>{{ bed.name }}</strong>
+                        {% if bed.description %}
+                        <br>
+                        <small class="text-muted">{{ bed.description }}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if bed.year %}
+                            {{ bed.year }}
+                        {% else %}
+                            <span class="text-muted">Not set</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ bed.width_feet }}' x {{ bed.length_feet }}'</td>
+                    <td>{{ bed.width_feet|mul:bed.length_feet|floatformat:1 }}</td>
+                    <td>
+                        {% for schedule in bed.current_plants %}
+                            <div class="mb-1">
+                                {{ schedule.plant.name }}
+                                {% if schedule.plant.variety_name %}
+                                    ({{ schedule.plant.variety_name }})
+                                {% endif %}
+                                <small class="text-muted">
+                                    - {{ schedule.get_status_display }}
+                                    {% if schedule.quantity > 1 %}
+                                        - {{ schedule.quantity }} plants
+                                    {% endif %}
+                                </small>
+                            </div>
+                        {% empty %}
+                            <span class="text-muted">No plants currently scheduled</span>
+                        {% endfor %}
+                    </td>
+                    <td>
+                        <div class="btn-group">
+                            <a href="{% url 'schedule:garden_bed_edit' bed.id %}" 
+                               class="btn btn-sm btn-outline-primary" 
+                               title="Edit garden bed">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" 
+                                    class="btn btn-sm btn-outline-danger" 
+                                    onclick="confirmDelete('{{ bed.id }}', '{{ bed.name }}')" 
+                                    title="Delete garden bed">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center py-4">
+                        <div class="alert alert-info mb-0">
+                            No garden beds found. Click "New Garden Bed" to create one!
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete the garden bed "<span id="bedName"></span>"?
+                This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete(bedId, bedName) {
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    document.getElementById('bedName').textContent = bedName;
+    document.getElementById('deleteForm').action = "{% url 'schedule:garden_bed_delete' 0 %}".replace('0', bedId);
+    modal.show();
+}
+</script>
+{% endblock %}

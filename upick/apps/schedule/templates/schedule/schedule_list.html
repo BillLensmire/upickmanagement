@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}Planting Schedule - You Pick Manager{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Planting Schedule</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'schedule:create' %}{% if selected_year %}?year={{ selected_year }}{% endif %}" class="btn btn-success">
+                <i class="fas fa-plus"></i> New Planting Schedule Entry
+            </a>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-2">
+                    <label for="year" class="form-label">Garden Plan Year</label>
+                    <select name="year" id="year" class="form-select">
+                        {% for year in available_years %}
+                        <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>
+                            {{ year }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        {% for status_code, status_label in status_choices %}
+                        <option value="{{ status_code }}" {% if status_code == selected_status %}selected{% endif %}>
+                            {{ status_label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% for bed, schedules in schedule_by_bed.items %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">{{ bed.name }}</h5>
+            <small class="text-muted">{{ bed.width_feet }}' x {{ bed.length_feet }}'</small>
+        </div>
+        <div class="card-body">
+            {% if schedules %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Plant</th>
+                            <th>Status</th>
+                            <th>Inside Date</th>
+                            <th>Outside Date</th>
+                            <th>Harvest Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for schedule in schedules %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'schedule:detail' schedule.id %}" class="text-decoration-none">
+                                    {{ schedule.variety.variety_plant.name }}
+                                    {% if schedule.variety.variety_name %}
+                                    <small class="text-muted">({{ schedule.variety.variety_name }})</small>
+                                    {% endif %}
+                                </a>
+                            </td>
+                            <td>
+                                <span class="badge {% if schedule.status == 'PLANNED' %}bg-warning{% elif schedule.status == 'PLANTED' %}bg-success{% elif schedule.status == 'HARVESTED' %}bg-info{% else %}bg-danger{% endif %}">
+                                    {{ schedule.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ schedule.inside_planting_date|default:"-" }}</td>
+                            <td>{{ schedule.outside_planting_date|default:"-" }}</td>
+                            <td>{{ schedule.harvest_date|default:"-" }}</td>
+                            <td>
+                                <a href="{% url 'schedule:edit' schedule.id %}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'schedule:duplicate' schedule.id %}" class="btn btn-sm btn-outline-secondary" title="Duplicate">
+                                    <i class="fas fa-copy"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-center mb-0">No schedules found for this garden bed.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="alert alert-info">
+        <h5>No Garden Beds Found</h5>
+        <p class="mb-0">Create a garden bed first to start planning your planting schedule.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add datepicker initialization if needed
+    const startDate = document.getElementById('start_date');
+    const endDate = document.getElementById('end_date');
+    
+    // Ensure end date is not before start date
+    startDate.addEventListener('change', function() {
+        endDate.min = this.value;
+    });
+    
+    endDate.addEventListener('change', function() {
+        startDate.max = this.value;
+    });
+});
+</script>
+{% endblock %}

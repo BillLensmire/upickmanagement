@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}{{ recipe_ingredient.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ recipe_ingredient.name }}</h1>
+        <div class="btn-group" role="group">
+            <a href="{% url 'foliarrecipes:recipeingredient_edit' recipe_ingredient.pk %}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            <a href="{% url 'foliarrecipes:recipeingredient_delete' recipe_ingredient.pk %}" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Delete
+            </a>
+            <a href="{% url 'foliarrecipes:recipeingredient_list' %}" class="btn btn-secondary">
+                <i class="fas fa-list"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="card-title">Basic Information</h5>
+                    <dl class="row">
+                        <dt class="col-sm-4">Name</dt>
+                        <dd class="col-sm-8">{{ recipe_ingredient.name }}</dd>
+
+                        <dt class="col-sm-4">Amount</dt>
+                        <dd class="col-sm-8">{{ recipe_ingredient.amount }} {{ recipe_ingredient.unit }}</dd>
+
+                        <dt class="col-sm-4">Optional</dt>
+                        <dd class="col-sm-8">
+                            {% if recipe_ingredient.optional %}
+                                <span class="badge bg-success">Yes</span>
+                            {% else %}
+                                <span class="badge bg-danger">No</span>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4">Order</dt>
+                        <dd class="col-sm-8">{{ recipe_ingredient.order }}</dd>
+                    </dl>
+                </div>
+
+                <div class="col-md-6">
+                    <h5 class="card-title">Purpose</h5>
+                    <p class="card-text">{{ recipe_ingredient.purpose|linebreaks }}</p>
+                </div>
+            </div>
+
+            {% if recipe_ingredient.recipe_relationships.exists %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h5 class="card-title">Used in Recipes</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Recipe Name</th>
+                                    <th>Growth Stage</th>
+                                    <th>Order</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for relationship in recipe_ingredient.recipe_relationships.all %}
+                                <tr>
+                                    <td>
+                                        <a href="#">{{ relationship.recipe.name }}</a>
+                                    </td>
+                                    <td>{{ relationship.recipe.get_growth_stage_display }}</td>
+                                    <td>{{ relationship.order }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

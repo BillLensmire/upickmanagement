@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% with page_app='produceplanner' page_name='overview' page_action='form' %}
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Produce Plan - You Pick Manager{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'produceplanner:overview_list' %}">Produce Plans</a></li>
+            <li class="breadcrumb-item active">{% if form.instance.pk %}Edit{% else %}Create{% endif %} Plan</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% if form.instance.pk %}Edit{% else %}Create{% endif %} Produce Plan</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <div class="text-end mt-3">
+                            <a href="{% url 'produceplanner:overview_list' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if form.instance.pk %}Save Changes{% else %}Create Plan{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize datepickers
+    $('.datepicker').datepicker({
+        format: 'yyyy-mm-dd',
+        autoclose: true,
+        todayHighlight: true,
+        clearBtn: true
+    });
+
+    // Form validation
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+
+    // Ensure end date is after start date
+    $('#id_overall_start_date').on('changeDate', function(e) {
+        $('#id_overall_end_date').datepicker('setStartDate', e.date);
+    });
+
+    $('#id_overall_end_date').on('changeDate', function(e) {
+        $('#id_overall_start_date').datepicker('setEndDate', e.date);
+    });
+});
+</script>
+{% endblock %}
+{% endwith %}

@@ -1,0 +1,432 @@
+{% extends 'admin/base_site.html' %}
+{% load i18n static %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <style>
+        .calendar {
+            width: 100%;
+            border-collapse: collapse;
+            color: #333;  /* Default text color */
+        }
+        .calendar th, .calendar td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            background-color: var(--body-bg);  /* Use Django's theme variable */
+            color: var(--body-fg);  /* Use Django's theme variable */
+        }
+        .calendar th {
+            background-color: var(--primary);  /* Use Django's theme variable */
+            color: var(--primary-fg);  /* Use Django's theme variable */
+        }
+        .calendar td {
+            height: 100px;
+            vertical-align: top;
+            position: relative;
+            width: 14.28%; /* 100% / 7 days */
+        }
+        .calendar-nav {
+            margin-bottom: 20px;
+        }
+        .planting-item {
+            margin-bottom: 4px;
+            padding: 4px;
+            border-radius: 3px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            color: #333;  /* Dark text for light backgrounds */
+            width: 350px;
+        }
+        .planting-item:hover {
+            opacity: 0.8;
+        }
+        .planting-planned {
+            background-color: #e3f2fd;
+            border: 1px solid #90caf9;
+        }
+        .planting-harvest {
+            background-color: #e8f5e9;
+            border: 1px solid #a5d6a7;
+        }
+        .today {
+            background-color: #fff3e0;
+            border: 2px solid var(--primary);  /* Use Django's theme variable */
+        }
+        .add-event-button {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            width: 24px;
+            height: 24px;
+            border-radius: 12px;
+            background-color: var(--primary);  /* Use Django's theme variable */
+            color: var(--primary-fg);  /* Use Django's theme variable */
+            text-align: center;
+            line-height: 24px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .add-event-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .add-event-button::before {
+            content: "Add event";
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            background: var(--body-bg);
+            color: var(--body-fg);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s, opacity 0.2s;
+            border: 1px solid var(--border-color);
+        }
+        .add-event-button:hover::before {
+            visibility: visible;
+            opacity: 1;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .modal-content {
+            position: relative;
+            background-color: var(--body-bg);  /* Use Django's theme variable */
+            color: var(--body-fg);  /* Use Django's theme variable */
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 5px;
+            width: 80%;
+            max-width: 500px;
+            border: 1px solid var(--border-color);  /* Use Django's theme variable */
+        }
+        .close-modal {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            cursor: pointer;
+            font-size: 20px;
+            color: var(--body-fg);  /* Use Django's theme variable */
+        }
+        .draggable {
+            cursor: move;
+        }
+        /* Debug section styling */
+        .debug-info {
+            background-color: var(--body-bg);  /* Use Django's theme variable */
+            color: var(--body-fg);  /* Use Django's theme variable */
+            border: 1px solid var(--border-color);  /* Use Django's theme variable */
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        /* Form styling */
+        .modal label {
+            color: var(--body-fg);  /* Use Django's theme variable */
+            display: block;
+            margin-bottom: 5px;
+        }
+        .modal select, .modal input {
+            background-color: var(--body-bg);  /* Use Django's theme variable */
+            color: var(--body-fg);  /* Use Django's theme variable */
+            border: 1px solid var(--border-color);  /* Use Django's theme variable */
+            padding: 5px;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+        .modal button {
+            background-color: var(--primary);  /* Use Django's theme variable */
+            color: var(--primary-fg);  /* Use Django's theme variable */
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .modal button:hover {
+            opacity: 0.9;
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .delete-button {
+            background-color: var(--delete-button-bg, #dc3545) !important;
+            color: var(--delete-button-fg, white) !important;
+        }
+        .delete-button:hover {
+            background-color: var(--delete-button-hover-bg, #c82333) !important;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-planned { background-color: #e3f2fd; border: 1px solid #90caf9; }
+        .status-planted { background-color: #c8e6c9; border: 1px solid #81c784; }
+        .status-harvested { background-color: #fff3e0; border: 1px solid #ffb74d; }
+        .status-failed { background-color: #ffcdd2; border: 1px solid #e57373; }
+    </style>
+{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+{% endblock %}
+
+{% block content %}
+    <div id="content-main">
+        <!-- Debug information -->
+        {% if debug %}
+        <div class="debug-info">
+            <h3>Debug Information:</h3>
+            <p>Month: {{ month_name }} {{ year }}</p>
+            <p>Number of days with events: {{ calendar_data|length }}</p>
+            {% for day, data in calendar_data.items %}
+                {% if data.plantings or data.harvests %}
+                    <p>Day {{ day }}:
+                        Plantings: {{ data.plantings|length }},
+                        Harvests: {{ data.harvests|length }}
+                    </p>
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <div class="calendar-nav">
+            <a href="{% url 'admin:schedule_plantingschedule_changelist' %}" class="button">← Back to List</a>
+            &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;
+            <a href="?month={{ prev_month }}&year={{ prev_year }}" class="button">← Previous Month</a>
+            &nbsp; {{ month_name }} {{ year }} &nbsp;
+            <a href="?month={{ next_month }}&year={{ next_year }}" class="button">Next Month →</a>
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+            <a href="pdf/?month={{ month }}&year={{ year }}" class="button" target="_blank">Export PDF</a>
+        </div>
+
+        <table class="calendar">
+            <thead>
+                <tr>
+                    <th>Sunday</th>
+                    <th>Monday</th>
+                    <th>Tuesday</th>
+                    <th>Wednesday</th>
+                    <th>Thursday</th>
+                    <th>Friday</th>
+                    <th>Saturday</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for week in calendar_weeks %}
+                <tr>
+                    {% for day_data in week %}
+                    <td {% if not day_data %}class="empty"{% endif %}>
+                        {% if day_data %}
+                            <div class="day-number">{{ day_data.0 }}</div>
+                            {% with data=day_data.1 %}
+                                {% for planting in data.plantings %}
+                                    <div class="planting-item planting-{{ planting.status|lower }}" data-id="{{ planting.id }}">
+                                        {{ planting.plant_name }}
+                                        {% if planting.event_type == 'planting' %}
+                                        {% elif planting.event_type == 'transplant' %}
+                                        {% else %}
+                                            (Harvest)
+                                        {% endif %}
+                                        <br>
+                                        <small>{{ planting.garden_bed }}</small>
+                                    </div>
+                                {% endfor %}
+                            {% endwith %}
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Quick Add Modal -->
+    <div id="quickAddModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Add New Event</h2>
+            <form id="quickAddForm">
+                {% csrf_token %}
+                <input type="hidden" name="date" id="eventDate">
+                <p>
+                    <label for="eventType">Event Type:</label>
+                    <select name="event_type" id="eventType" required>
+                        <option value="planting">Planting</option>
+                        <option value="harvest">Harvest</option>
+                    </select>
+                </p>
+                <p>
+                    <label for="plant">Plant:</label>
+                    <select name="plant" id="plant" required>
+                        {% for plant in available_plants %}
+                            <option value="{{ plant.id }}">{{ plant.name }}{% if plant.variety_name %} - {{ plant.variety_name }}{% endif %}</option>
+                        {% endfor %}
+                    </select>
+                </p>
+                <p>
+                    <label for="gardenBed">Garden Bed:</label>
+                    <select name="garden_bed" id="gardenBed" required>
+                        {% for bed in available_beds %}
+                            <option value="{{ bed.id }}">{{ bed.name }}</option>
+                        {% endfor %}
+                    </select>
+                </p>
+                <p>
+                    <label for="status">Status:</label>
+                    <select name="status" id="status" required>
+                        <option value="PLANNED"><span class="status-indicator status-planned"></span>Planned</option>
+                        <option value="PLANTED"><span class="status-indicator status-planted"></span>Planted</option>
+                        <option value="HARVESTED"><span class="status-indicator status-harvested"></span>Harvested</option>
+                        <option value="FAILED"><span class="status-indicator status-failed"></span>Failed</option>
+                    </select>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="quickEditModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Edit Event</h2>
+            <form id="quickEditForm">
+                {% csrf_token %}
+                <input type="hidden" name="date" id="editEventDate">
+                <input type="hidden" name="event_type" id="editEventType">
+                <p>Current Date: <span id="currentEventDate"></span></p>
+                <p>New Date: <input type="date" name="new_date" id="newEventDate" required></p>
+                <div class="button-group">
+                    <button type="submit" class="button">Update Event</button>
+                    <button type="button" class="button delete-button" id="deleteEventButton">Delete Event</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Quick Add functionality
+            $('.add-event-button').click(function() {
+                const date = $(this).data('date');
+                $('#eventDate').val(date);
+                $('#quickAddModal').show();
+            });
+
+            // Quick Edit functionality
+            $('.planting-item').click(function() {
+                const id = $(this).data('id');
+                const type = $(this).data('type');
+                const currentDate = $(this).closest('td').find('.add-event-button').data('date');
+                
+                $('#editEventDate').val(currentDate);
+                $('#editEventType').val(type);
+                $('#currentEventDate').text(currentDate);
+                $('#newEventDate').val(currentDate);
+                
+                $('#quickEditForm').attr('action', `quick-edit/${id}/`);
+                $('#quickEditModal').show();
+            });
+
+            // Close modals
+            $('.close-modal').click(function() {
+                $(this).closest('.modal').hide();
+            });
+
+            // Handle form submissions
+            $('#quickAddForm').submit(function(e) {
+                e.preventDefault();
+                $.post('quick-add/', $(this).serialize())
+                    .done(function(response) {
+                        if (response.status === 'success') {
+                            location.reload();
+                        } else {
+                            alert(response.message);
+                        }
+                    });
+            });
+
+            $('#quickEditForm').submit(function(e) {
+                e.preventDefault();
+                $.post($(this).attr('action'), $(this).serialize())
+                    .done(function(response) {
+                        if (response.status === 'success') {
+                            location.reload();
+                        } else {
+                            alert(response.message);
+                        }
+                    });
+            });
+
+            // Add delete functionality
+            $('#deleteEventButton').click(function(e) {
+                e.preventDefault();
+                if (!confirm('Are you sure you want to delete this event?')) {
+                    return;
+                }
+                
+                const form = $('#quickEditForm');
+                const url = form.attr('action').replace('quick-edit', 'delete-event');
+                
+                $.post(url, {
+                    'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()
+                }).done(function(response) {
+                    if (response.status === 'success') {
+                        location.reload();
+                    } else {
+                        alert(response.message);
+                    }
+                });
+            });
+
+            // Make events draggable
+            $('.draggable').draggable({
+                revert: true,
+                zIndex: 100
+            });
+
+            // Make calendar cells droppable
+            $('.calendar td').droppable({
+                accept: '.draggable',
+                drop: function(event, ui) {
+                    const eventId = ui.draggable.data('id');
+                    const eventType = ui.draggable.data('type');
+                    const newDate = $(this).find('.add-event-button').data('date');
+                    
+                    $.post(`move-event/${eventId}/`, {
+                        'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val(),
+                        'date': newDate,
+                        'event_type': eventType
+                    }).done(function(response) {
+                        if (response.status === 'success') {
+                            location.reload();
+                        } else {
+                            alert(response.message);
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+{% endblock %}

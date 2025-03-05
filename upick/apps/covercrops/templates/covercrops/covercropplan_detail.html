@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ object.name }} - Cover Crop Plan{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ object.name }}</h1>
+        <div class="btn-group">
+            <a href="{% url 'covercrops:plan_update' object.pk %}" class="btn btn-outline-primary">
+                <i class="fas fa-edit me-2"></i>Edit
+            </a>
+            <a href="{% url 'covercrops:plan_delete' object.pk %}" class="btn btn-outline-danger">
+                <i class="fas fa-trash me-2"></i>Delete
+            </a>
+        </div>
+    </div>
+
+    {% if object.description %}
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Description</h5>
+            <p class="card-text">{{ object.description }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Planting Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        {% if object.mix %}
+                        <dt class="col-sm-4">Cover Crop Mix</dt>
+                        <dd class="col-sm-8">
+                            <a href="{% url 'covercrops:mix_detail' object.mix.pk %}">{{ object.mix.name }}</a>
+                        </dd>
+                        {% endif %}
+                        
+                        <dt class="col-sm-4">Season</dt>
+                        <dd class="col-sm-8">{{ object.get_planting_season_display }}</dd>
+                        
+                        <dt class="col-sm-4">Planting Window</dt>
+                        <dd class="col-sm-8">{{ object.planting_window_start|date:"M d" }} - {{ object.planting_window_end|date:"M d" }}</dd>
+                        
+                        <dt class="col-sm-4">Growth Period</dt>
+                        <dd class="col-sm-8">{{ object.weeks_to_grow }} weeks</dd>
+                        
+                        <dt class="col-sm-4">Minimum Soil Temp</dt>
+                        <dd class="col-sm-8">{{ object.minimum_soil_temp }}°F</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Growing Conditions & Benefits</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" disabled {% if object.frost_tolerant %}checked{% endif %}>
+                                <label class="form-check-label">Frost Tolerant</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" disabled {% if object.drought_tolerant %}checked{% endif %}>
+                                <label class="form-check-label">Drought Tolerant</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6>Benefits</h6>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" disabled {% if object.nitrogen_fixer %}checked{% endif %}>
+                                <label class="form-check-label">Nitrogen Fixer</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" disabled {% if object.biomass_producer %}checked{% endif %}>
+                                <label class="form-check-label">Biomass Producer</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" disabled {% if object.weed_suppressor %}checked{% endif %}>
+                                <label class="form-check-label">Weed Suppressor</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" disabled {% if object.erosion_controller %}checked{% endif %}>
+                                <label class="form-check-label">Erosion Controller</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if object.beneficial_insect %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Beneficial Insects</h5>
+        </div>
+        <div class="card-body">
+            {% if object.attracted_beneficials.exists %}
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                {% for beneficial in object.attracted_beneficials.all %}
+                <div class="col">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-title">{{ beneficial.name }}</h6>
+                            <p class="card-text small">{{ beneficial.description|truncatewords:30 }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted">No specific beneficial insects listed.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Termination</h5>
+        </div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Method</dt>
+                <dd class="col-sm-9">{{ object.get_termination_method_display }}</dd>
+                
+                <dt class="col-sm-3">Days Before Next Crop</dt>
+                <dd class="col-sm-9">{{ object.days_before_cash_crop }} days</dd>
+            </dl>
+        </div>
+    </div>
+</div>
+{% endblock %}

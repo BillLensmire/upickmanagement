@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Edit{% else %}Create{% endif %} Cover Crop Mix{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">{% if object %}Edit{% else %}Create{% endif %} Cover Crop Mix</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    {# Main form fields #}
+                    <div class="mb-4">
+                        <h5 class="border-bottom pb-2">Basic Information</h5>
+                        {% for field in form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            {{ field.errors }}
+                            {% if field.name == 'description' %}
+                                <textarea name="{{ field.name }}" class="form-control" id="{{ field.id_for_label }}" rows="3">{{ field.value|default:'' }}</textarea>
+                            {% else %}
+                                <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" class="form-control" id="{{ field.id_for_label }}" value="{{ field.value|default:'' }}">
+                            {% endif %}
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    {# Component formset #}
+                    <div class="mb-4">
+                        <h5 class="border-bottom pb-2">Mix Components</h5>
+                        {{ component_formset.management_form }}
+                        <div id="component-forms">
+                            {% for component_form in component_formset %}
+                            <div class="component-form border rounded p-3 mb-3 position-relative{% if component_form.instance.pk %} bg-light{% endif %}">
+                                {% if component_form.instance.pk %}
+                                    <div class="position-absolute top-0 end-0 p-2">
+                                        {{ component_form.DELETE }}
+                                        <label for="{{ component_form.DELETE.id_for_label }}" class="form-check-label text-danger">
+                                            <i class="fas fa-trash"></i> Remove
+                                        </label>
+                                    </div>
+                                {% endif %}
+                                
+                                {% for hidden in component_form.hidden_fields %}
+                                    {{ hidden }}
+                                {% endfor %}
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ component_form.seed_inventory.id_for_label }}" class="form-label">Seed</label>
+                                        {{ component_form.seed_inventory.errors }}
+                                        {{ component_form.seed_inventory }}
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label for="{{ component_form.seeding_rate.id_for_label }}" class="form-label">Seeding Rate (lbs/acre)</label>
+                                        {{ component_form.seeding_rate.errors }}
+                                        {{ component_form.seeding_rate }}
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label for="{{ component_form.percentage_in_mix.id_for_label }}" class="form-label">Percentage (%)</label>
+                                        {{ component_form.percentage_in_mix.errors }}
+                                        {{ component_form.percentage_in_mix }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <button type="button" class="btn btn-outline-success" id="add-component">
+                            <i class="fas fa-plus"></i> Add Component
+                        </button>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Save Cover Crop Mix
+                        </button>
+                        <a href="{% url 'covercrops:mix_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Enable Bootstrap form validation
+    var forms = document.querySelectorAll('.needs-validation');
+    Array.prototype.slice.call(forms).forEach(function(form) {
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+
+    // Handle dynamic formset
+    const addButton = document.getElementById('add-component');
+    const componentForms = document.getElementById('component-forms');
+    const totalFormsInput = document.getElementById('id_covercropplantcomponent_set-TOTAL_FORMS');
+    
+    addButton.addEventListener('click', function() {
+        const formCount = componentForms.children.length;
+        const template = componentForms.children[0].cloneNode(true);
+        template.classList.remove('bg-light');
+        
+        // Update form index
+        template.innerHTML = template.innerHTML.replace(/-\d+-/g, `-${formCount}-`);
+        
+        // Clear form values
+        template.querySelectorAll('input, select').forEach(input => {
+            if (input.type !== 'hidden') {
+                input.value = '';
+            }
+        });
+        
+        componentForms.appendChild(template);
+        totalFormsInput.value = formCount + 1;
+    });
+});
+</script>
+{% endblock %}

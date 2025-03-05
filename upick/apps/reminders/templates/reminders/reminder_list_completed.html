@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}My Reminders{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>My Reminders</h1>
+        <a href="{% url 'reminders:reminder_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> New Reminder
+        </a>
+        <a href="{% url 'reminders:reminder_list' %}" class="btn btn-primary">
+            <i class="fas fa-backward"></i> Return To Reminder List
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <h2>Completed Reminders</h2>
+            {% if completed_reminders %}
+            <div class="list-group">
+                {% for reminder in completed_reminders %}
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-1">
+                            <a href="{% url 'reminders:reminder_detail' pk=reminder.pk %}" class="text-decoration-none text-muted">
+                                <s>{{ reminder.title }}</s>
+                            </a>
+                        </h5>
+                        <div class="btn-group">
+                            <form method="post" action="{% url 'reminders:reminder_toggle_complete' pk=reminder.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-secondary">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                            </form>
+                            &nbsp; &nbsp;
+                            <a href="{% url 'reminders:reminder_duplicate' pk=reminder.pk %}" class="btn btn-sm btn-primary" title="Make New Reminder">
+                                <i class="fas fa-copy"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <small class="text-muted">
+                        Completed: {{ reminder.updated_at|date:"M d, Y" }}
+                    </small>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted">No completed reminders</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .list-group-item {
+        transition: all 0.2s;
+    }
+    .list-group-item:hover {
+        transform: translateX(5px);
+    }
+</style>
+{% endblock %}

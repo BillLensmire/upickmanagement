@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Delete {{ supplier_mineral_product.mineral_raw.name }} from {{ supplier_mineral_product.supplier.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'foliarrecipes:suppliermineralproduct_list' %}">Supplier Products</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Delete</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title text-danger mb-4">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Delete Confirmation
+                    </h2>
+
+                    <p class="lead">
+                        Are you sure you want to delete the supplier product:
+                        <strong>{{ supplier_mineral_product.mineral_raw.name }}</strong>
+                        from <strong>{{ supplier_mineral_product.supplier.name }}</strong>?
+                    </p>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        This action cannot be undone.
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'foliarrecipes:suppliermineralproduct_detail' supplier_mineral_product.pk %}" 
+                               class="btn btn-secondary me-md-2">
+                                <i class="fas fa-times me-1"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-1"></i> Delete
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

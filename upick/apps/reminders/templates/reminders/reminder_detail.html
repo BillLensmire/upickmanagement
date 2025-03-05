@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ reminder.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'reminders:reminder_list' %}">Reminders</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ reminder.title }}</li>
+        </ol>
+    </nav>
+
+    {% if messages %}
+    <div class="messages mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <h1 class="card-title h2">{{ reminder.title }}</h1>
+                    <p class="text-muted mb-0">
+                        Created by {{ reminder.creator.username }} on {{ reminder.created_at|date:"M d, Y" }}
+                    </p>
+                </div>
+                <div class="btn-group">
+                    {% if reminder.creator == user %}
+                    <a href="{% url 'reminders:reminder_edit' pk=reminder.pk %}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    {% endif %}
+                    <form method="post" action="{% url 'reminders:reminder_toggle_complete' pk=reminder.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn {% if reminder.completed %}btn-secondary{% else %}btn-success{% endif %}">
+                            {% if reminder.completed %}
+                            <i class="fas fa-undo"></i> Mark Incomplete
+                            {% else %}
+                            <i class="fas fa-check"></i> Mark Complete
+                            {% endif %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <h3>Description</h3>
+                    <p class="card-text">{{ reminder.description|linebreaks|default:"No description provided." }}</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h3>Details</h3>
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4">Status</dt>
+                                <dd class="col-sm-8">
+                                    {% if reminder.completed %}
+                                    <span class="badge bg-success">Completed</span>
+                                    {% else %}
+                                        {% if reminder.is_overdue %}
+                                        <span class="badge bg-danger">Overdue</span>
+                                        {% else %}
+                                        <span class="badge bg-primary">Active</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </dd>
+
+                                <dt class="col-sm-4">Priority</dt>
+                                <dd class="col-sm-8">{{ reminder.get_priority_display }}</dd>
+
+                                {% if reminder.due_date %}
+                                <dt class="col-sm-4">Due Date</dt>
+                                <dd class="col-sm-8">
+                                    {{ reminder.due_date|date:"M d, Y" }}
+                                    {% if reminder.is_overdue and not reminder.completed %}
+                                    <span class="text-danger">(Overdue)</span>
+                                    {% endif %}
+                                </dd>
+                                {% endif %}
+
+                                {% if reminder.assigned_to %}
+                                <dt class="col-sm-4">Assigned To</dt>
+                                <dd class="col-sm-8">{{ reminder.assigned_to.username }}</dd>
+                                {% endif %}
+
+                                <dt class="col-sm-4">Last Updated</dt>
+                                <dd class="col-sm-8">{{ reminder.updated_at|date:"M d, Y" }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

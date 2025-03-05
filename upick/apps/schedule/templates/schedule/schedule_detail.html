@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ schedule.plant.name }} Schedule - You Pick Manager{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'schedule:list' %}">Schedule</a></li>
+            <li class="breadcrumb-item active">{{ schedule.plant.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>{{ schedule.variety.variety_plant.name }} - {{ schedule.variety.variety_name }}</h1>
+        </div>
+        <div class="col-md-4">
+            <a href="{% url 'schedule:edit' schedule.id %}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Edit Schedule
+            </a>
+            <a href="{% url 'schedule:duplicate' schedule.id %}" class="btn btn-secondary">
+                <i class="fas fa-copy"></i> Duplicate
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Schedule Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6>Garden Bed</h6>
+                            <p>{{ schedule.garden_bed.name }}</p>
+                            
+                            <h6>Status</h6>
+                            <p>
+                                <span class="badge {% if schedule.status == 'PLANNED' %}bg-warning{% elif schedule.status == 'PLANTED' %}bg-success{% elif schedule.status == 'HARVESTED' %}bg-info{% else %}bg-danger{% endif %}">
+                                    {{ schedule.get_status_display }}
+                                </span>
+                            </p>
+                            
+                            <h6>Quantity</h6>
+                            <p>{{ schedule.quantity }} plants in {{ schedule.rows }} row{{ schedule.rows|pluralize }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Key Information</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>Bed Size:</strong> {{ schedule.garden_bed.width_feet }} x {{ schedule.garden_bed.length_feet }}</li>
+                                {% if schedule.inside_planting_date %}
+                                <li><strong>Inside Planting:</strong> {{ schedule.inside_planting_date }}</li>
+                                {% else %}
+                                <li><strong>Inside Planting:</strong> Not Set</li>
+                                {% endif %}
+                                {% if schedule.outside_planting_date %}
+                                <li><strong>Outside Planting:</strong> {{ schedule.outside_planting_date }}</li>
+                                {% else %}
+                                <li><strong>Outside Planting:</strong> Not Set</li>
+                                {% endif %}
+                                {% if schedule.harvest_date %}
+                                <li><strong>Expected Harvest:</strong> {{ schedule.harvest_date }}</li>
+                                {% else %}
+                                <li><strong>Expected Harvest:</strong> Not Set</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+
+                    {% if schedule.notes %}
+                    <div class="mb-4">
+                        <h6>Notes</h6>
+                        <p>{{ schedule.notes|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if schedule.location_notes %}
+                    <div class="mb-4">
+                        <h6>Location Notes</h6>
+                        <p>{{ schedule.location_notes|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Plant Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li><strong>Name:</strong> {{ schedule.variety.variety_plant.name }} - {{ schedule.variety.variety_name }}</li>
+                                <li><strong>Method:</strong> {{ schedule.variety.variety_planting_method }}</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Spacing</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>Between Plants:</strong> {{ schedule.variety.variety_spacing_between_plants }}"</li>
+                                <li><strong>Between Rows:</strong> {{ schedule.variety.variety_spacing_between_rows }}"</li>
+                                <li><strong>Height:</strong> {{ schedule.variety.variety_plant.height_inches }}"</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

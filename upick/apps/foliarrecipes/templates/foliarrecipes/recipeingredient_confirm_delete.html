@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Delete {{ recipe_ingredient.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card">
+        <div class="card-body">
+            <h1 class="h2 mb-4 text-danger">Confirm Deletion</h1>
+            
+            <p class="lead">Are you sure you want to delete the recipe ingredient <strong>{{ recipe_ingredient.name }}</strong>?</p>
+            
+            {% if recipe_ingredient.recipe_relationships.exists %}
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> This ingredient is used in 
+                {{ recipe_ingredient.recipe_relationships.count }} recipe(s). Deleting it will remove it from these recipes.
+            </div>
+            
+            <h5 class="mt-3">Used in the following recipes:</h5>
+            <ul>
+                {% for relationship in recipe_ingredient.recipe_relationships.all %}
+                <li>{{ relationship.recipe.name }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Confirm Delete
+                    </button>
+                    <a href="{% url 'foliarrecipes:recipeingredient_detail' recipe_ingredient.pk %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

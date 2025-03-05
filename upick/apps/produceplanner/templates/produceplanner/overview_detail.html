@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+
+{% with page_app='produceplanner' page_name='overview' page_action='detail' %}
+{% block title %}{{ overview.garden_plan.name }} - Produce Plan{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'produceplanner:overview_list' %}">Produce Plans</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'planning:garden_plan_detail' overview.garden_plan.id %}">{{ overview.garden_plan.name }}</a></li>
+            <li class="breadcrumb-item active">Produce Plan</li>
+        </ol>
+    </nav>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>{{ overview.garden_plan.name }} - {{ overview.garden_plan.year }}</h1>
+            <p class="text-muted">
+                Produce available from {{ overview.overall_start_date|date:"M j, Y" }} to {{ overview.overall_end_date|date:"M j, Y" }}
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="btn-group" role="group">
+                <a href="{% url 'produceplanner:overview_update' overview.pk %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-edit"></i> Edit Plan
+                </a>
+                <a href="{% url 'produceplanner:produce_availability_report' overview.pk %}" class="btn btn-outline-info">
+                    <i class="fas fa-calendar"></i> View Report
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Produce List</h5>
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addProduceModal">
+                        <i class="fas fa-plus"></i> Add Produce
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Plant</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for plan in produce_plans %}
+                                <tr>
+                                    <td>
+                                        {{ plan.plant.name }}
+                                        {% if plan.plant.variety_name %}
+                                        <small class="text-muted">({{ plan.plant.variety_name }})</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ plan.start_date|date:"M j, Y" }}</td>
+                                    <td>{{ plan.end_date|date:"M j, Y" }}</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-danger delete-produce" data-plan-id="{{ plan.id }}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No produce added yet. Click "Add Produce" to get started!</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Garden Plan Details</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Plan Name</dt>
+                        <dd class="col-sm-8">{{ overview.garden_plan.name }}</dd>
+
+                        <dt class="col-sm-4">Year</dt>
+                        <dd class="col-sm-8">{{ overview.garden_plan.year }}</dd>
+
+                        <dt class="col-sm-4">Start Date</dt>
+                        <dd class="col-sm-8">{{ overview.overall_start_date|date:"M j, Y" }}</dd>
+
+                        <dt class="col-sm-4">End Date</dt>
+                        <dd class="col-sm-8">{{ overview.overall_end_date|date:"M j, Y" }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Produce Modal -->
+<div class="modal fade" id="addProduceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Produce</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addProduceForm" method="post" action="{% url 'produceplanner:add_produce' overview.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="plant" class="form-label">Plant</label>
+                        <select class="form-select" id="plant" name="plant" required>
+                            <option value="">Select a plant...</option>
+                            {% for plant in available_plants %}
+                            <option value="{{ plant.id }}">
+                                {{ plant.name }}
+                                {% if plant.variety_name %}({{ plant.variety_name }}){% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="start_date" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="end_date" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="addProduceForm" class="btn btn-primary">Add Produce</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Date handling for the add produce form
+    const startDateInput = document.getElementById('start_date');
+    const endDateInput = document.getElementById('end_date');
+    const overallStartDate = '{{ overview.overall_start_date|date:"Y-m-d" }}';
+    const overallEndDate = '{{ overview.overall_end_date|date:"Y-m-d" }}';
+
+    if (startDateInput && endDateInput) {
+        // Set the min/max dates based on the overall plan dates
+        startDateInput.min = overallStartDate;
+        startDateInput.max = overallEndDate;
+        endDateInput.min = overallStartDate;
+        endDateInput.max = overallEndDate;
+
+        startDateInput.addEventListener('change', function() {
+            if (this.value) {
+                endDateInput.min = this.value;
+            }
+        });
+
+        endDateInput.addEventListener('change', function() {
+            if (this.value && startDateInput.value) {
+                this.min = startDateInput.value;
+            }
+        });
+    }
+
+    // Delete produce handling
+    document.querySelectorAll('.delete-produce').forEach(button => {
+        button.addEventListener('click', function() {
+            if (confirm('Are you sure you want to remove this produce from the plan?')) {
+                const planId = this.dataset.planId;
+                fetch(`/produce/plan/${planId}/delete/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    },
+                }).then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert('Error removing produce from plan');
+                    }
+                });
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+{% endwith %}

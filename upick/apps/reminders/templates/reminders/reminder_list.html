@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}My Reminders{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>My Reminders</h1>
+        <a href="{% url 'reminders:reminder_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> New Reminder
+        </a>
+        <a href="{% url 'reminders:reminder_list_completed' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> View Completed Reminders
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <h2>Active Reminders</h2>
+            {% if grouped_reminders %}
+                {% for month_key, month_data in grouped_reminders %}
+                <div class="mb-4">
+                    <h3 class="h5 mb-3">{{ month_data.display }}</h3>
+                    <div class="list-group">
+                        {% for reminder in month_data.reminders %}
+                        <div class="list-group-item {% if reminder.is_overdue %}border-danger{% endif %}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-1">
+                                    <a href="{% url 'reminders:reminder_detail' pk=reminder.pk %}" class="text-decoration-none">
+                                        {{ reminder.title }}
+                                    </a>
+                                </h5>
+                                <form method="post" action="{% url 'reminders:reminder_toggle_complete' pk=reminder.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            <p class="mb-1">{{ reminder.description|truncatewords:30 }}</p>
+                            <small>
+                                Due: {{ reminder.due_date|date:"M d, Y" }}
+                                {% if reminder.is_overdue %}
+                                <span class="text-danger">(Overdue)</span>
+                                {% endif %}
+                                / {{ reminder.get_priority_display }}
+                                {% if reminder.assigned_to %}
+                                / {{ reminder.assigned_to.username }}
+                                {% endif %}
+                            </small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+            <p class="text-muted">No active reminders</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .list-group-item {
+        transition: all 0.2s;
+    }
+    .list-group-item:hover {
+        transform: translateX(5px);
+    }
+</style>
+{% endblock %}

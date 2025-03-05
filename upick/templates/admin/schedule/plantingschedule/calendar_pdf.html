@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Garden Calendar - {{ month_name }} {{ year }}</title>
+    <style>
+        @page {
+            size: letter landscape;
+            margin: 0.5cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .calendar {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        .calendar th {
+            background-color: #f5f5f5;
+            padding: 4px;
+            border: 1px solid #ddd;
+            font-size: 10pt;
+        }
+        .calendar td {
+            border: 1px solid #ddd;
+            padding: 4px;
+            vertical-align: top;
+            height: 80px;
+            width: 14.28%; /* 100% / 7 days */
+            position: relative;
+            font-size: 9pt;
+        }
+        .calendar-day {
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        .event {
+            margin: 1px 0;
+            padding: 2px;
+            border-radius: 2px;
+            font-size: 8pt;
+            line-height: 1.1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .event small {
+            font-size: 7pt;
+            color: #666;
+        }
+        .event-PLANNED { background-color: #e3f2fd; }
+        .event-PLANTED { background-color: #c8e6c9; }
+        .event-HARVESTED { background-color: #fff3e0; }
+        .event-FAILED { background-color: #ffcdd2; }
+        .month-title {
+            text-align: center;
+            font-size: 16pt;
+            margin: 10px 0;
+        }
+        .empty {
+            background-color: #f9f9f9;
+        }
+        .day-number {
+            font-weight: bold;
+            margin-bottom: 4px;
+            font-size: 10pt;
+        }
+        /* Compact layout for events */
+        .event br {
+            display: none;
+        }
+        .event small::before {
+            content: " - ";
+        }
+    </style>
+</head>
+<body>
+    <h1 class="month-title">{{ month_name }} {{ year }}</h1>
+    
+    {% if debug %}
+    <div class="debug-info">
+        <p>Calendar weeks: {{ calendar_weeks|length }}</p>
+        <p>Month: {{ month_name }} {{ year }}</p>
+    </div>
+    {% endif %}
+    
+    <table class="calendar">
+        <thead>
+            <tr>
+                <th>Sunday</th>
+                <th>Monday</th>
+                <th>Tuesday</th>
+                <th>Wednesday</th>
+                <th>Thursday</th>
+                <th>Friday</th>
+                <th>Saturday</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for week in calendar_weeks %}
+            <tr>
+                {% for day_data in week %}
+                <td {% if not day_data %}class="empty"{% endif %}>
+                    {% if day_data %}
+                        <div class="day-number">{{ day_data.0 }}</div>
+                        {% with data=day_data.1 %}
+                            {% for planting in data.plantings %}
+                                <div class="event event-{{ planting.status }}">
+                                    {{ planting.plant_name }}
+                                    {% if planting.event_type == 'planting' %}
+                                        (Plant)
+                                    {% elif planting.event_type == 'transplant' %}
+                                        (Outside)
+                                    {% else %}
+                                        (Harvest)
+                                    {% endif %}
+                                    <small>{{ planting.garden_bed }}</small>
+                                </div>
+                            {% endfor %}
+                        {% endwith %}
+                    {% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

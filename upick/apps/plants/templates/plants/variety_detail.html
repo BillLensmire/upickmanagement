@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ variety.variety_name }} - You Pick Manager{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'plants:variety_list' %}">Varieties</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ variety.variety_name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h1>{{ variety.variety_name }}</h1>
+                    {% if variety.variety_plant %}
+                    <h4 class="text-muted">
+                        <a href="{% url 'plants:detail' variety.variety_plant.pk %}">{{ variety.variety_plant.name }}</a>
+                    </h4>
+                    {% endif %}
+                </div>
+                <div>
+                    <a href="{% url 'plants:variety_edit' variety.pk %}" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Edit Variety
+                    </a>
+                </div>
+            </div>
+            
+            {% if variety.scientific_name %}
+            <p class="font-italic">{{ variety.scientific_name }}</p>
+            {% endif %}
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5>Growing Requirements</h5>
+                    <ul class="list-unstyled">
+                        <li><strong>Planting Method:</strong> {{ variety.get_variety_planting_method_display }}</li>
+                        <li><strong>Planting Season:</strong> {{ variety.get_variety_planting_season_display }}</li>
+                        {% if variety.variety_spacing_between_plants %}
+                        <li><strong>Between Plants:</strong> {{ variety.variety_spacing_between_plants }}"</li>
+                        {% elif variety.variety_plant.spacing_between_plants %}
+                        <li><strong>Between Plants:</strong> {{ variety.variety_plant.spacing_between_plants }}" (from plant)</li>
+                        {% endif %}
+                        
+                        {% if variety.variety_spacing_between_rows %}
+                        <li><strong>Between Rows:</strong> {{ variety.variety_spacing_between_rows }}"</li>
+                        {% elif variety.variety_plant.spacing_between_rows %}
+                        <li><strong>Between Rows:</strong> {{ variety.variety_plant.spacing_between_rows }}" (from plant)</li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5>Growing Timeline</h5>
+                    <ul class="list-unstyled">
+                        {% if variety.variety_days_to_maturity %}
+                        <li><strong>Days to Maturity:</strong> {{ variety.variety_days_to_maturity }}</li>
+                        {% elif variety.variety_plant.days_to_maturity %}
+                        <li><strong>Days to Maturity:</strong> {{ variety.variety_plant.days_to_maturity }} (from plant)</li>
+                        {% endif %}
+                        
+                        {% if variety.variety_days_from_seed_to_transplant %}
+                        <li><strong>Days from Seed to Transplant:</strong> {{ variety.variety_days_from_seed_to_transplant }}</li>
+                        {% elif variety.variety_plant.days_from_seed_to_transplant %}
+                        <li><strong>Days from Seed to Transplant:</strong> {{ variety.variety_plant.days_from_seed_to_transplant }} (from plant)</li>
+                        {% endif %}
+                        {% if variety.variety_days_from_frost_to_transplant %}
+                        <li><strong>Days After Last Frost to Transplant:</strong> {{ variety.variety_days_from_frost_to_transplant }}</li>
+                        {% elif variety.variety_plant.days_from_frost_to_transplant %}
+                        <li><strong>Days After Last Frost to Transplant:</strong> {{ variety.variety_plant.days_from_frost_to_transplant }} (from plant)</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <h5>Notes</h5>
+                <p>{{ variety.variety_description }}</p>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

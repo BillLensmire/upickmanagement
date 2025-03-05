@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% load static %}
+{% load page_tags %}
+{% with page_app='foliarrecipes' page_name='supplier' page_action='form' %}
+
+{% block title %}
+    {% if object %}Edit {{ object.name }}{% else %}Add New Supplier{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'foliarrecipes:supplier_list' %}">Suppliers</a></li>
+            <li class="breadcrumb-item active">{% if object %}Edit {{ object.name }}{% else %}New Supplier{% endif %}</li>
+        </ol>
+    </nav>
+
+    <div class="card">
+        <div class="card-body">
+            <h1 class="h2 mb-4">{% if object %}Edit {{ object.name }}{% else %}New Supplier{% endif %}</h1>
+
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" role="alert">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="mb-3">Basic Information</h5>
+
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name*</label>
+                            <input type="text" class="form-control {% if form.name.errors %}is-invalid{% endif %}" 
+                                   id="name" name="name" value="{{ form.name.value|default:'' }}" required>
+                            {% if form.name.errors %}
+                            <div class="invalid-feedback">{{ form.name.errors|join:', ' }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="website" class="form-label">Website</label>
+                            <input type="url" class="form-control {% if form.website.errors %}is-invalid{% endif %}" 
+                                   id="website" name="website" value="{{ form.website.value|default:'' }}"
+                                   placeholder="https://example.com">
+                            {% if form.website.errors %}
+                            <div class="invalid-feedback">{{ form.website.errors|join:', ' }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="contact_name" class="form-label">Contact Name</label>
+                            <input type="text" class="form-control {% if form.contact_name.errors %}is-invalid{% endif %}" 
+                                   id="contact_name" name="contact_name" value="{{ form.contact_name.value|default:'' }}">
+                            {% if form.contact_name.errors %}
+                            <div class="invalid-feedback">{{ form.contact_name.errors|join:', ' }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="contact_email" class="form-label">Contact Email</label>
+                            <input type="email" class="form-control {% if form.contact_email.errors %}is-invalid{% endif %}" 
+                                   id="contact_email" name="contact_email" value="{{ form.contact_email.value|default:'' }}">
+                            {% if form.contact_email.errors %}
+                            <div class="invalid-feedback">{{ form.contact_email.errors|join:', ' }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <h5 class="mb-3">Additional Details</h5>
+
+                        <div class="mb-3">
+                            <label for="contact_phone" class="form-label">Contact Phone</label>
+                            <input type="tel" class="form-control {% if form.contact_phone.errors %}is-invalid{% endif %}" 
+                                   id="contact_phone" name="contact_phone" value="{{ form.contact_phone.value|default:'' }}">
+                            {% if form.contact_phone.errors %}
+                            <div class="invalid-feedback">{{ form.contact_phone.errors|join:', ' }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="account_number" class="form-label">Account Number</label>
+                            <input type="text" class="form-control {% if form.account_number.errors %}is-invalid{% endif %}" 
+                                   id="account_number" name="account_number" value="{{ form.account_number.value|default:'' }}">
+                            {% if form.account_number.errors %}
+                            <div class="invalid-feedback">{{ form.account_number.errors|join:', ' }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="shipping_notes" class="form-label">Shipping Notes</label>
+                            <textarea class="form-control {% if form.shipping_notes.errors %}is-invalid{% endif %}" 
+                                      id="shipping_notes" name="shipping_notes" rows="3">{{ form.shipping_notes.value|default:'' }}</textarea>
+                            {% if form.shipping_notes.errors %}
+                            <div class="invalid-feedback">{{ form.shipping_notes.errors|join:', ' }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Additional Notes</label>
+                            <textarea class="form-control {% if form.notes.errors %}is-invalid{% endif %}" 
+                                      id="notes" name="notes" rows="3">{{ form.notes.value|default:'' }}</textarea>
+                            {% if form.notes.errors %}
+                            <div class="invalid-feedback">{{ form.notes.errors|join:', ' }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'foliarrecipes:supplier_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// Form validation
+(function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+            form.classList.add('was-validated')
+        }, false)
+    })
+})()
+</script>
+{% endblock %}
+
+{% endblock %}
+{% endwith %}

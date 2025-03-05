@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Markdown and LaTeX Help{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h1 class="h2 mb-0">Markdown and LaTeX Syntax Guide</h1>
+            <button type="button" class="btn btn-secondary" onclick="window.close()">Close Help</button>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h2 class="h4 mb-0">Markdown Syntax</h2>
+                        </div>
+                        <div class="card-body">
+                            <h3 class="h5">Headers</h3>
+                            <pre><code># Header 1
+## Header 2
+### Header 3
+#### Header 4
+##### Header 5
+###### Header 6</code></pre>
+
+                            <h3 class="h5 mt-4">Emphasis</h3>
+                            <pre><code>*Italic text* or _Italic text_
+**Bold text** or __Bold text__
+~~Strikethrough~~</code></pre>
+
+                            <h3 class="h5 mt-4">Lists</h3>
+                            <pre><code>Unordered List:
+* Item 1
+* Item 2
+  * Subitem 2.1
+  * Subitem 2.2
+
+Ordered List:
+1. First item
+2. Second item
+3. Third item</code></pre>
+
+                            <h3 class="h5 mt-4">Links</h3>
+                            <pre><code>[Link text](https://example.com)
+[Link with title](https://example.com "Title")</code></pre>
+
+                            <h3 class="h5 mt-4">Images</h3>
+                            <pre><code>![Alt text](image-url.jpg)
+![Alt text](image-url.jpg "Image title")</code></pre>
+
+                            <h3 class="h5 mt-4">Blockquotes</h3>
+                            <pre><code>> This is a blockquote
+> It can span multiple lines
+>
+> > Nested blockquotes</code></pre>
+
+                            <h3 class="h5 mt-4">Code</h3>
+                            <pre><code>Inline code: `code here`
+
+Code block:
+```
+function example() {
+  return "Hello world!";
+}
+```
+
+Syntax highlighting:
+```python
+def hello_world():
+    print("Hello, world!")
+```</code></pre>
+
+                            <h3 class="h5 mt-4">Tables</h3>
+                            <pre><code>| Header 1 | Header 2 | Header 3 |
+|----------|----------|----------|
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |</code></pre>
+
+                            <h3 class="h5 mt-4">Horizontal Rule</h3>
+                            <pre><code>---
+or
+***
+or
+___</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h2 class="h4 mb-0">LaTeX Syntax</h2>
+                        </div>
+                        <div class="card-body">
+                            <h3 class="h5">Inline Math</h3>
+                            <p>Use <code>$...$</code> for inline math expressions.</p>
+                            <pre><code>The formula for water is $H_2O$.</code></pre>
+                            <p>Result: The formula for water is $H_2O$.</p>
+
+                            <h3 class="h5 mt-4">Display Math</h3>
+                            <p>Use <code>$$...$$</code> for display math expressions.</p>
+                            <pre><code>$$E = mc^2$$</code></pre>
+                            <p>Result:</p>
+                            <div>$$E = mc^2$$</div>
+
+                            <h3 class="h5 mt-4">Fractions</h3>
+                            <pre><code>$\frac{numerator}{denominator}$</code></pre>
+                            <p>Example: $\frac{1}{2}$</p>
+
+                            <h3 class="h5 mt-4">Subscripts and Superscripts</h3>
+                            <pre><code>$x^2$ (superscript)
+$x_i$ (subscript)
+$x_i^j$ (both)</code></pre>
+                            <p>Examples: $x^2$, $x_i$, $x_i^j$</p>
+
+                            <h3 class="h5 mt-4">Greek Letters</h3>
+                            <pre><code>$\alpha, \beta, \gamma, \delta, \epsilon, \zeta, \eta, \theta$
+$\iota, \kappa, \lambda, \mu, \nu, \xi, \pi, \rho$
+$\sigma, \tau, \upsilon, \phi, \chi, \psi, \omega$
+$\Gamma, \Delta, \Theta, \Lambda, \Xi, \Pi, \Sigma, \Phi, \Psi, \Omega$</code></pre>
+
+                            <h3 class="h5 mt-4">Common Functions</h3>
+                            <pre><code>$\sin(x), \cos(x), \tan(x)$
+$\log(x), \ln(x), \exp(x)$
+$\lim_{x \to \infty} f(x)$
+$\sum_{i=1}^{n} x_i$
+$\prod_{i=1}^{n} x_i$
+$\int_{a}^{b} f(x) dx$</code></pre>
+
+                            <h3 class="h5 mt-4">Matrices</h3>
+                            <pre><code>$$\begin{pmatrix}
+a & b \\
+c & d
+\end{pmatrix}$$</code></pre>
+                            <p>Result:</p>
+                            <div>$$\begin{pmatrix}
+a & b \\
+c & d
+\end{pmatrix}$$</div>
+
+                            <h3 class="h5 mt-4">Equations</h3>
+                            <pre><code>$$\begin{align}
+y &= mx + b \\
+&= 2x + 3
+\end{align}$$</code></pre>
+                            <p>Result:</p>
+                            <div>$$\begin{align}
+y &= mx + b \\
+&= 2x + 3
+\end{align}$$</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4">
+                <p class="text-center">
+                    <button type="button" class="btn btn-secondary" onclick="window.close()">Close Help</button>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

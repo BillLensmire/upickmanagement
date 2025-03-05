@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Mineral URLs{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-link me-2"></i>Mineral URLs</h1>
+        <a href="{% url 'minerals:mineral_url_add' %}" class="btn btn-success">
+            <i class="fas fa-plus me-2"></i>Add URL
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-success text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-list me-2"></i>URLs List</h5>
+                <div class="btn-group" role="group">
+                    <a href="{% url 'minerals:mineral_list' %}" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-leaf me-1"></i>Minerals
+                    </a>
+                    <a href="{% url 'minerals:plant_requirement_list' %}" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-seedling me-1"></i>Plant Requirements
+                    </a>
+                    <a href="{% url 'minerals:nutrient_note_list' %}" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-sticky-note me-1"></i>Notes
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>URL</th>
+                            <th>Related Mineral</th>
+                            <th>Date Added</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for url_obj in urls %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'minerals:mineral_url_detail' url_obj.pk %}" class="me-2">
+                                    {{ url_obj.url|truncatechars:50 }}
+                                </a>
+                                <a href="{{ url_obj.url }}" target="_blank" class="text-primary">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            </td>
+                            <td>
+                                {% if url_obj.mineral %}
+                                <a href="{% url 'minerals:mineral_detail' url_obj.mineral.pk %}">
+                                    {{ url_obj.mineral.name }}
+                                </a>
+                                {% else %}
+                                <span class="text-muted">General URL</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ url_obj.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'minerals:mineral_url_edit' url_obj.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'minerals:mineral_url_delete' url_obj.pk %}" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center">No mineral URLs found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

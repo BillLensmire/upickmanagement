@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load produceplanner_extras %}
+
+{% block title %}Produce Availability Report{% endblock %}
+
+{% with page_app='produceplanner' page_name='report' page_action='view' %}
+
+{% block extra_css %}
+<style>
+    .availability-table {
+        border-collapse: collapse;
+        width: auto;
+        margin: 20px 0;
+    }
+    .availability-table th,
+    .availability-table td {
+        border: 1px solid #dee2e6;
+        padding: 0;
+        text-align: center;
+    }
+
+    .plant-column {
+        min-width: 200px;
+        white-space: nowrap;
+        font-size: 0.9em;
+        text-align: left !important;
+        background-color: #f8f9fa;
+        padding: 8px !important;
+    }
+    .week-header {
+        width: 30px;
+        height: 150px;
+        padding: 8px 4px;
+        white-space: nowrap;
+        background-color: #f8f9fa;
+        text-align: center;
+    }
+    .table-wrapper {
+        overflow-x: auto;
+        margin-top: 20px;
+        padding-bottom: 20px;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'planning:garden_plan_list' %}">Garden Plans</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'planning:garden_plan_detail' overview.garden_plan.id %}">{{ overview.garden_plan.name }}</a></li>
+            <li class="breadcrumb-item active">Produce Availability Report</li>
+        </ol>
+    </nav>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1>Produce Availability Report</h1>
+            <h4 class="text-muted">{{ overview.garden_plan.name }} {{ overview.garden_plan.year }}</h4>
+        </div>
+    </div>
+    <div class="table-wrapper">
+            <table class="availability-table">
+                <thead>
+                    <tr>
+                        <th class="plant-column">Plant</th>
+                        {% for week in date_ranges %}
+                            <th class="week-header" style="writing-mode: vertical-lr !important; transform: rotate(180deg) !important;">{{ week.date_range }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in plant_matrix %}
+                        <tr>
+                            <td class="plant-column">{{ row.plant }}</td>
+                            {% for is_available in row.availability %}
+                                <td style="width: 30px; height: 30px; background-color: {% if is_available %}#28a745{% else %}#965151{% endif %}"></td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+</div>
+{% endblock %}
+{% endwith %}

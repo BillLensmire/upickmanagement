@@ -1,0 +1,33 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .field-photo a {
+        display: inline-block;
+        margin-top: 5px;
+    }
+    .field-photo img {
+        max-width: 300px;
+        height: auto;
+    }
+</style>
+{% endblock %}
+
+{% block field_sets %}
+    {{ block.super }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const photoField = document.querySelector('.field-photo');
+            if (photoField) {
+                const currentLink = photoField.querySelector('a');
+                if (currentLink && currentLink.href) {
+                    currentLink.setAttribute('target', '_blank');
+                    currentLink.setAttribute('rel', 'noopener noreferrer');
+                    currentLink.innerHTML += '<br>View Full Size in New Tab';
+                }
+            }
+        });
+    </script>
+{% endblock %}

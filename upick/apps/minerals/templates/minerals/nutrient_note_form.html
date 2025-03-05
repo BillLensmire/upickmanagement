@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit Note{% else %}Add Note{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'minerals:nutrient_note_list' %}">Nutrient Notes</a></li>
+            <li class="breadcrumb-item active" aria-current="page">
+                {% if form.instance.pk %}Edit{% else %}Add{% endif %} Note
+            </li>
+        </ol>
+    </nav>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-{% if form.instance.pk %}edit{% else %}plus{% endif %} me-2"></i>
+                {% if form.instance.pk %}Edit{% else %}Add{% endif %} Nutrient Note
+            </h5>
+        </div>
+        <div class="card-body">
+            {% crispy form %}
+        </div>
+    </div>
+    
+    {% if not form.instance.pk %}
+    <div class="card shadow mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>About Nutrient Notes</h5>
+        </div>
+        <div class="card-body">
+            <p>Use nutrient notes to record information about minerals and nutrients that you want to remember. This could include:</p>
+            <ul>
+                <li>Research findings about specific nutrients</li>
+                <li>Observations from your garden related to nutrient deficiencies or excesses</li>
+                <li>Information from books, articles, or other sources</li>
+                <li>Personal experiences with specific nutrient applications</li>
+            </ul>
+            <p class="mb-0">You can optionally link a note to a specific nutrient, or leave it as a general note.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

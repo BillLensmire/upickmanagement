@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit URL{% else %}Add URL{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'minerals:mineral_url_list' %}">Mineral URLs</a></li>
+            <li class="breadcrumb-item active" aria-current="page">
+                {% if form.instance.pk %}Edit{% else %}Add{% endif %} URL
+            </li>
+        </ol>
+    </nav>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-{% if form.instance.pk %}edit{% else %}plus{% endif %} me-2"></i>
+                {% if form.instance.pk %}Edit{% else %}Add{% endif %} Mineral URL
+            </h5>
+        </div>
+        <div class="card-body">
+            {% crispy form %}
+        </div>
+    </div>
+    
+    {% if not form.instance.pk %}
+    <div class="card shadow mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>About Mineral URLs</h5>
+        </div>
+        <div class="card-body">
+            <p>Use this form to save useful URLs related to minerals and nutrients. These could include:</p>
+            <ul>
+                <li>Research papers or articles about specific nutrients</li>
+                <li>Educational resources about plant nutrition</li>
+                <li>Supplier websites for mineral supplements</li>
+                <li>Videos or tutorials about nutrient application</li>
+            </ul>
+            <p class="mb-0">You can optionally link a URL to a specific mineral, or leave it as a general resource.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

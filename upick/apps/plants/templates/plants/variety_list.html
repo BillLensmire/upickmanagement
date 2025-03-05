@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Varieties - You Pick Manager{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>Plant Varieties</h1>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'plants:variety_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Variety
+        </a>
+    </div>
+    <form method="get" action="{% url 'plants:variety_search' %}" class="mb-4" id="varietySearchForm">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <input type="text" name="q" class="form-control" placeholder="Search varieties..." value="{{ request.GET.q|default:'' }}">
+            </div>
+            <div class="col-md-3">
+                <select name="plant" class="form-select search-input">
+                    <option value="">All Plants</option>
+                    {% for plant in plant_list %}
+                    <option value="{{ plant.id }}" {% if plant.id|stringformat:"i" == request.GET.plant %}selected{% endif %}>{{ plant.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Variety Name</th>
+                <th>Plant</th>
+                <th>Scientific Name</th>
+                <th>Season</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for variety in varieties %}
+            <tr>
+                <td class="fw-bold">{{ variety.variety_name }}</td>
+                <td>{% if variety.variety_plant %}<a href="{% url 'plants:detail' variety.variety_plant.pk %}">{{ variety.variety_plant.name }}</a>{% else %}-{% endif %}</td>
+                <td>{{ variety.scientific_name|default:"-" }}</td>
+                <td><span class="badge bg-success">{{ variety.get_variety_planting_season_display }}</span></td>
+                <td>{{ variety.variety_description|truncatewords:15 }}</td>
+                <td>
+                    <div class="btn-group" role="group">
+                        <a href="{% url 'plants:variety_detail' variety.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                        &nbsp;&nbsp; &nbsp;
+                        <a href="{% url 'plants:variety_edit' variety.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                        &nbsp;&nbsp; &nbsp;
+                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteVarietyModal{{ variety.pk }}">
+                            Delete
+                        </button>
+                    </div>
+                    <!-- Delete Modal -->
+                    <div class="modal fade" id="deleteVarietyModal{{ variety.pk }}" tabindex="-1" aria-labelledby="deleteVarietyModalLabel{{ variety.pk }}" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="deleteVarietyModalLabel{{ variety.pk }}">Confirm Delete</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    Are you sure you want to delete <strong>{{ variety.variety_name }}</strong>? This action cannot be undone.
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <form action="{% url 'plants:variety_delete' variety.pk %}" method="post" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">No varieties found matching your criteria.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add event listeners to all search inputs
+        document.querySelectorAll('.search-input').forEach(function(input) {
+            input.addEventListener('change', function() {
+                document.getElementById('varietySearchForm').submit();
+            });
+        });
+        
+        // For the text input, use input event with a delay
+        const textInput = document.querySelector('input[name="q"]');
+        if (textInput) {
+            let timeout = null;
+            textInput.addEventListener('input', function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    document.getElementById('varietySearchForm').submit();
+                }, 500); // Wait for 500ms after the user stops typing
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}{{ supplier_mineral_product.mineral_raw.name }} from {{ supplier_mineral_product.supplier.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'foliarrecipes:suppliermineralproduct_list' %}">Supplier Products</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ supplier_mineral_product.mineral_raw.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ supplier_mineral_product.mineral_raw.name }} from {{ supplier_mineral_product.supplier.name }}</h1>
+        <div class="btn-group" role="group">
+            <a href="{% url 'foliarrecipes:suppliermineralproduct_edit' supplier_mineral_product.pk %}" 
+               class="btn btn-warning">
+                <i class="fas fa-edit me-1"></i> Edit
+            </a>
+            <a href="{% url 'foliarrecipes:suppliermineralproduct_delete' supplier_mineral_product.pk %}" 
+               class="btn btn-danger">
+                <i class="fas fa-trash me-1"></i> Delete
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="card-title">Product Details</h5>
+                    <table class="table">
+                        <tr>
+                            <th>Supplier:</th>
+                            <td>
+                                <a href="{% url 'foliarrecipes:supplier_detail' supplier_mineral_product.supplier.pk %}">
+                                    {{ supplier_mineral_product.supplier.name }}
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Mineral Raw:</th>
+                            <td>
+                                <a href="{% url 'foliarrecipes:mineralraw_detail' supplier_mineral_product.mineral_raw.pk %}">
+                                    {{ supplier_mineral_product.mineral_raw.name }}
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Product Code:</th>
+                            <td>{{ supplier_mineral_product.product_code|default:"N/A" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Package Size:</th>
+                            <td>{{ supplier_mineral_product.package_size }} {{ supplier_mineral_product.package_unit }}</td>
+                        </tr>
+                        <tr>
+                            <th>Price:</th>
+                            <td>${{ supplier_mineral_product.price }}</td>
+                        </tr>
+                        <tr>
+                            <th>Minimum Order:</th>
+                            <td>{{ supplier_mineral_product.minimum_order }}</td>
+                        </tr>
+                        {% if supplier_mineral_product.url %}
+                        <tr>
+                            <th>Product URL:</th>
+                            <td><a href="{{ supplier_mineral_product.url }}" target="_blank">View on supplier website</a></td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h5 class="card-title">Mineral Details</h5>
+                    <table class="table">
+                        <tr>
+                            <th>Mineral:</th>
+                            <td>{{ supplier_mineral_product.mineral_raw.mineral }}</td>
+                        </tr>
+                        <tr>
+                            <th>Form:</th>
+                            <td>{{ supplier_mineral_product.mineral_raw.get_form_display }}</td>
+                        </tr>
+                        <tr>
+                            <th>Mineral Content:</th>
+                            <td>{{ supplier_mineral_product.mineral_raw.mineral_content }}%</td>
+                        </tr>
+                        <tr>
+                            <th>Solubility:</th>
+                            <td>{{ supplier_mineral_product.mineral_raw.solubility }} g/L at 20°C</td>
+                        </tr>
+                        <tr>
+                            <th>pH Range:</th>
+                            <td>{{ supplier_mineral_product.mineral_raw.ph_range }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            {% if supplier_mineral_product.notes %}
+            <div class="mt-4">
+                <h5 class="card-title">Notes</h5>
+                <p class="card-text">{{ supplier_mineral_product.notes|linebreaks }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

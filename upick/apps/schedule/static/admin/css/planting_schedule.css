@@ -1,0 +1,46 @@
+.plant-select {
+    width: 100%;
+    max-width: 500px;
+}
+
+.field-planting_method_display {
+    white-space: nowrap;
+}
+
+/* Hide the calendar plus button */
+.calendar td .day-number::after {
+    display: none !important;
+}
+
+.calendar td:hover .day-number::after {
+    display: none !important;
+}
+
+/* Hide any quick-add buttons */
+.calendar .quick-add {
+    display: none !important;
+}
+
+/* Calendar navigation styles */
+.calendar-nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1rem 0;
+    padding: 0.5rem 0;
+}
+
+.calendar-nav .button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.calendar-nav .button:first-child {
+    margin-right: auto; /* Push other items to the right */
+}
+
+.calendar-actions {
+    margin-bottom: 1rem;
+}

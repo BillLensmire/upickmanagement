@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Cover Crop Plans{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Cover Crop Plans</h1>
+        <a href="{% url 'covercrops:plan_create' %}" class="btn btn-success">
+            <i class="fas fa-plus me-2"></i>New Plan
+        </a>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for plan in object_list %}
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ plan.name }}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">{{ plan.get_planting_season_display }}</h6>
+                    
+                    {% if plan.mix %}
+                    <p class="card-text"><i class="fas fa-spa me-2"></i>Mix: {{ plan.mix.name }}</p>
+                    {% endif %}
+                    
+                    <p class="card-text">
+                        <i class="fas fa-calendar me-2"></i>Plant: {{ plan.planting_window_start|date:"M d" }} - {{ plan.planting_window_end|date:"M d" }}
+                    </p>
+                    
+                    <div class="mb-3">
+                        {% if plan.nitrogen_fixer %}
+                        <span class="badge bg-success me-1" title="Nitrogen Fixer">
+                            <i class="fas fa-leaf"></i>
+                        </span>
+                        {% endif %}
+                        {% if plan.biomass_producer %}
+                        <span class="badge bg-primary me-1" title="Biomass Producer">
+                            <i class="fas fa-seedling"></i>
+                        </span>
+                        {% endif %}
+                        {% if plan.weed_suppressor %}
+                        <span class="badge bg-warning me-1" title="Weed Suppressor">
+                            <i class="fas fa-ban"></i>
+                        </span>
+                        {% endif %}
+                        {% if plan.erosion_controller %}
+                        <span class="badge bg-info me-1" title="Erosion Controller">
+                            <i class="fas fa-water"></i>
+                        </span>
+                        {% endif %}
+                        {% if plan.beneficial_insect %}
+                        <span class="badge bg-danger me-1" title="Attracts Beneficial Insects">
+                            <i class="fas fa-bug"></i>
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="btn-group">
+                        <a href="{% url 'covercrops:plan_detail' plan.pk %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye me-1"></i>View
+                        </a>
+                        <a href="{% url 'covercrops:plan_update' plan.pk %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-edit me-1"></i>Edit
+                        </a>
+                        <a href="{% url 'covercrops:plan_delete' plan.pk %}" class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-trash me-1"></i>Delete
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>No cover crop plans found. Create your first plan!
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

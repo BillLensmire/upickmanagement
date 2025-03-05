@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Welcome to You Pick Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 text-center">
+        <h1 class="display-4">Welcome to You Pick Manager</h1>
+        <p class="lead">Your complete solution for planning and managing your garden</p>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Log Book</h5>
+                <p class="card-text">View and Enter Notes into the Garden Log</p>
+                <a href="{% url 'log:log_list' %}" class="btn btn-success">View Log Book</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Reminders</h5>
+                <p class="card-text">View and Enter Reminders</p>
+                <a href="{% url 'reminders:reminder_list' %}" class="btn btn-success">View Reminders</a>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Plants</h5>
+                    <p class="card-text">Browse and manage your plant catalog. Find detailed information about growing requirements, planting methods, and harvest times.</p>
+                    <a href="{% url 'plants:list' %}" class="btn btn-success">View Plants</a>
+                    </div>
+                </div>
+            </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Schedule</h5>
+                <p class="card-text">Plan and track your planting schedule. Manage planting dates, monitor growth progress, and track harvests for each garden bed.</p>
+                <a href="{% url 'schedule:list' %}" class="btn btn-success">View Schedule</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

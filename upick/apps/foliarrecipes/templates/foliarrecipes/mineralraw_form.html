@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% load static %}
+{% load page_tags %}
+{% with page_app='foliarrecipes' page_name='mineralraw' page_action='form' %}
+
+{% block title %}
+    {% if object %}Edit {{ object.name }}{% else %}Add New Raw Mineral{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'foliarrecipes:mineralraw_list' %}">Raw Minerals</a></li>
+            <li class="breadcrumb-item active">{% if object %}Edit {{ object.name }}{% else %}New Raw Mineral{% endif %}</li>
+        </ol>
+    </nav>
+
+    <div class="card">
+        <div class="card-body">
+            <h1 class="h2 mb-4">{% if object %}Edit {{ object.name }}{% else %}New Raw Mineral{% endif %}</h1>
+
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" role="alert">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name*</label>
+                            <input type="text" class="form-control {% if form.name.errors %}is-invalid{% endif %}" 
+                                   id="name" name="name" value="{{ form.name.value|default:'' }}" required>
+                            {% if form.name.errors %}
+                            <div class="invalid-feedback">{{ form.name.errors|join:', ' }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="mineral" class="form-label">Primary Mineral*</label>
+                            <input type="text" class="form-control {% if form.mineral.errors %}is-invalid{% endif %}" 
+                                   id="mineral" name="mineral" value="{{ form.mineral.value|default:'' }}" required>
+                            {% if form.mineral.errors %}
+                            <div class="invalid-feedback">{{ form.mineral.errors|join:', ' }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Suppliers</label>
+                            <div class="supplier-list">
+                                {% for supplier in suppliers %}
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" 
+                                           id="supplier_{{ supplier.id }}" name="suppliers" 
+                                           value="{{ supplier.id }}" 
+                                           {% if supplier in object.suppliers.all %}checked{% endif %}>
+                                    <label class="form-check-label" for="supplier_{{ supplier.id }}">{{ supplier.name }}</label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="form" class="form-label">Form*</label>
+                            <select class="form-select {% if form.form.errors %}is-invalid{% endif %}" 
+                                    id="form" name="form" required>
+                                <option value="">Select a form...</option>
+                                {% for value, label in form.fields.form.choices %}
+                                <option value="{{ value }}" {% if form.form.value == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            {% if form.form.errors %}
+                            <div class="invalid-feedback">{{ form.form.errors|join:', ' }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="chemical_formula" class="form-label">Chemical Formula</label>
+                            <input type="text" class="form-control {% if form.chemical_formula.errors %}is-invalid{% endif %}" 
+                                   id="chemical_formula" name="chemical_formula" value="{{ form.chemical_formula.value|default:'' }}">
+                            {% if form.chemical_formula.errors %}
+                            <div class="invalid-feedback">{{ form.chemical_formula.errors|join:', ' }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="mineral_content" class="form-label">Mineral Content (%)*</label>
+                            <input type="number" step="0.01" class="form-control {% if form.mineral_content.errors %}is-invalid{% endif %}" 
+                                   id="mineral_content" name="mineral_content" value="{{ form.mineral_content.value|default:'' }}" required>
+                            {% if form.mineral_content.errors %}
+                            <div class="invalid-feedback">{{ form.mineral_content.errors|join:', ' }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="solubility" class="form-label">Solubility (g/L at 20°C)*</label>
+                            <input type="number" step="0.01" class="form-control {% if form.solubility.errors %}is-invalid{% endif %}" 
+                                   id="solubility" name="solubility" value="{{ form.solubility.value|default:'' }}" required>
+                            {% if form.solubility.errors %}
+                            <div class="invalid-feedback">{{ form.solubility.errors|join:', ' }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="ph_range" class="form-label">pH Range*</label>
+                            <input type="text" class="form-control {% if form.ph_range.errors %}is-invalid{% endif %}" 
+                                   id="ph_range" name="ph_range" value="{{ form.ph_range.value|default:'' }}" 
+                                   placeholder="e.g., 5.5-7.0" required>
+                            {% if form.ph_range.errors %}
+                            <div class="invalid-feedback">{{ form.ph_range.errors|join:', ' }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea class="form-control {% if form.notes.errors %}is-invalid{% endif %}" 
+                                      id="notes" name="notes" rows="4">{{ form.notes.value|default:'' }}</textarea>
+                            {% if form.notes.errors %}
+                            <div class="invalid-feedback">{{ form.notes.errors|join:', ' }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'foliarrecipes:mineralraw_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// Form validation
+(function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+            form.classList.add('was-validated')
+        }, false)
+    })
+})()
+</script>
+{% endblock %}
+
+{% endblock %}
+{% endwith %}

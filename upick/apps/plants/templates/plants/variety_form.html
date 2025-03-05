@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags crispy_forms_filters %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Add{% endif %} Variety{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    {% if plant %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'plants:list' %}">Plants</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'plants:detail' plant.pk %}">{{ plant.name }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Add Variety</li>
+        </ol>
+    </nav>
+    {% endif %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">
+                        {% if form.instance.pk %}
+                            Edit Variety
+                        {% elif plant %}
+                            Add Variety for {{ plant.name }}
+                        {% else %}
+                            Add Variety
+                        {% endif %}
+                    </h2>
+                </div>
+                <div class="card-body">
+                    {% if plant %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Some fields have been pre-populated with values from the parent plant "{{ plant.name }}". Feel free to adjust them as needed.
+                    </div>
+                    {% endif %}
+                    <form method="post" class="form">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <!-- Basic Information -->
+                            <div class="col-md-6">
+                                {% if not plant %}
+                                {{ form.variety_plant|as_crispy_field }}
+                                {% endif %}
+                                {{ form.variety_name|as_crispy_field }}
+                                {{ form.scientific_name|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.variety_planting_method|as_crispy_field }}
+                                {{ form.variety_planting_season|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                {{ form.variety_description|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <!-- Growing Requirements -->
+                        <h4 class="mt-4">Growing Requirements</h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.variety_spacing_between_plants|as_crispy_field }}
+                                {{ form.variety_spacing_between_rows|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <!-- Timing -->
+                        <h4 class="mt-4">Timing</h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.variety_days_to_maturity|as_crispy_field }}
+                                {{ form.variety_days_from_seed_to_transplant|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.variety_days_from_frost_to_transplant|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                {% if form.instance.pk %}Update{% else %}Create{% endif %} Variety
+                            </button>
+                            <a href="{% url 'plants:variety_list' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Delete {{ supplier_chelating_product.chelating_agent.name }} from {{ supplier_chelating_product.supplier.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'foliarrecipes:supplierchelatingproduct_list' %}">Chelating Products</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Delete</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">Confirm Deletion</h2>
+                    
+                    <p class="alert alert-danger">
+                        Are you sure you want to delete the chelating product "{{ supplier_chelating_product.chelating_agent.name }}" 
+                        from {{ supplier_chelating_product.supplier.name }}?
+                    </p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'foliarrecipes:supplierchelatingproduct_detail' supplier_chelating_product.pk %}" 
+                               class="btn btn-secondary me-md-2">Cancel</a>
+                            <button type="submit" class="btn btn-danger">Confirm Delete</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

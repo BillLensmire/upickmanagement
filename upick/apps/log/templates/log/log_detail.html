@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% load static %}
+{% load markdown_filters %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'log:log_list' %}">Garden Log</a></li>
+            <li class="breadcrumb-item active">{{ log_entry.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <h1 class="h2 mb-2">{{ log_entry.title }}</h1>
+                    <p class="text-muted mb-0">
+                        <span class="badge bg-secondary me-2">{{ log_entry.get_entry_type_display }}</span>
+                        Log Date: {{ log_entry.logdate|date:"F d, Y" }}
+                    </p>
+                </div>
+                <a href="{% url 'log:log_edit' pk=log_entry.pk %}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Edit Entry
+                </a>
+            </div>
+
+            <!-- Related Items Section -->
+            <div class="related-items mb-4">
+                <h5>Related Items</h5>
+                <div class="row">
+                    {% if log_entry.plants.all %}
+                    <div class="col-md-4 mb-3">
+                        <strong>Plants:</strong>
+                        <ul class="list-unstyled">
+                            {% for plant in log_entry.plants.all %}
+                            <li>{{ plant.name }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    {% if log_entry.plant_schedule %}
+                    <div class="col-md-4 mb-3">
+                        <strong>Plant Schedule:</strong>
+                        <p>{{ log_entry.plant_schedule }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if log_entry.foliar_recipe %}
+                    <div class="col-md-4 mb-3">
+                        <strong>Foliar Recipe:</strong>
+                        <p>{{ log_entry.foliar_recipe }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if log_entry.cover_crop %}
+                    <div class="col-md-4 mb-3">
+                        <strong>Cover Crop:</strong>
+                        <p>{{ log_entry.cover_crop }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if log_entry.beneficial %}
+                    <div class="col-md-4 mb-3">
+                        <strong>Beneficial Organism:</strong>
+                        <p>{{ log_entry.beneficial }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if log_entry.garden_bed %}
+                    <div class="col-md-4 mb-3">
+                        <strong>Garden Bed:</strong>
+                        <p>{{ log_entry.garden_bed }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if log_entry.seed_source %}
+                    <div class="col-md-4 mb-3">
+                        <strong>Seed Source:</strong>
+                        <p>{{ log_entry.seed_source }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="description-content mb-4">
+                <h5>Notes (supports markdown)</h5>
+                {{ log_entry.description|markdown_with_latex }}
+            </div>
+
+            <!-- Media Section -->
+            {% if log_entry.photo or log_entry.document %}
+            <div class="media-section mb-4">
+                <h5>Attachments</h5>
+                {% if log_entry.photo %}
+                <div class="mb-3">
+                    <img src="{{ log_entry.photo.url }}" alt="Log Entry Photo" class="img-fluid rounded" style="max-width: 300px">
+                </div>
+                {% endif %}
+                {% if log_entry.document %}
+                <div>
+                    <a href="{{ log_entry.document.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                        <i class="fas fa-file"></i> View Document
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{% url 'log:log_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Log List
+        </a>
+    </div>
+</div>
+{% endblock %}

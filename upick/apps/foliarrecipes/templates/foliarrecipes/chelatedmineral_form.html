@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% load static %}
+{% load page_tags %}
+{% with page_app='foliarrecipes' page_name='chelatedmineral' page_action='form' %}
+
+{% block title %}
+    {% if object %}Edit {{ object.name }}{% else %}Add New Chelated Mineral{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'foliarrecipes:chelatedmineral_list' %}">Chelated Minerals</a></li>
+            <li class="breadcrumb-item active">{% if object %}Edit {{ object.name }}{% else %}New Chelated Mineral{% endif %}</li>
+        </ol>
+    </nav>
+
+    <div class="card">
+        <div class="card-body">
+            <h1 class="h2 mb-4">{% if object %}Edit {{ object.name }}{% else %}New Chelated Mineral{% endif %}</h1>
+
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" role="alert">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name*</label>
+                            <input type="text" class="form-control {% if form.name.errors %}is-invalid{% endif %}" 
+                                   id="name" name="name" value="{{ form.name.value|default:'' }}" required>
+                            {% if form.name.errors %}
+                            <div class="invalid-feedback">{{ form.name.errors|join:', ' }}</div>
+                            {% endif %}
+                            <div class="form-text">Name of the chelated mineral solution</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="mineral_raw" class="form-label">Mineral Source*</label>
+                            <select class="form-select {% if form.mineral_raw.errors %}is-invalid{% endif %}" 
+                                    id="mineral_raw" name="mineral_raw" required>
+                                <option value="">Select a mineral source</option>
+                                {% for choice in form.fields.mineral_raw.queryset %}
+                                <option value="{{ choice.id }}" {% if form.mineral_raw.value|stringformat:'s' == choice.id|stringformat:'s' %}selected{% endif %}>
+                                    {{ choice.name }} ({{ choice.mineral }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.mineral_raw.errors %}
+                            <div class="invalid-feedback">{{ form.mineral_raw.errors|join:', ' }}</div>
+                            {% endif %}
+                            <div class="form-text">Source of the mineral</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="mineral_amount" class="form-label">Mineral Amount (g)*</label>
+                            <input type="number" step="0.01" class="form-control {% if form.mineral_amount.errors %}is-invalid{% endif %}" 
+                                   id="mineral_amount" name="mineral_amount" value="{{ form.mineral_amount.value|default:'' }}" required>
+                            {% if form.mineral_amount.errors %}
+                            <div class="invalid-feedback">{{ form.mineral_amount.errors|join:', ' }}</div>
+                            {% endif %}
+                            <div class="form-text">Amount of mineral source in grams</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="water_amount" class="form-label">Water Amount (L)*</label>
+                            <input type="number" step="0.01" class="form-control {% if form.water_amount.errors %}is-invalid{% endif %}" 
+                                   id="water_amount" name="water_amount" value="{{ form.water_amount.value|default:'' }}" required>
+                            {% if form.water_amount.errors %}
+                            <div class="invalid-feedback">{{ form.water_amount.errors|join:', ' }}</div>
+                            {% endif %}
+                            <div class="form-text">Amount of water in liters</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="ph_target" class="form-label">Target pH*</label>
+                            <input type="number" step="0.01" min="0" max="14" class="form-control {% if form.ph_target.errors %}is-invalid{% endif %}" 
+                                   id="ph_target" name="ph_target" value="{{ form.ph_target.value|default:'' }}" required>
+                            {% if form.ph_target.errors %}
+                            <div class="invalid-feedback">{{ form.ph_target.errors|join:', ' }}</div>
+                            {% endif %}
+                            <div class="form-text">Target pH for chelation (0-14)</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="temperature" class="form-label">Temperature (°C)*</label>
+                            <input type="number" step="0.01" class="form-control {% if form.temperature.errors %}is-invalid{% endif %}" 
+                                   id="temperature" name="temperature" value="{{ form.temperature.value|default:'' }}" required>
+                            {% if form.temperature.errors %}
+                            <div class="invalid-feedback">{{ form.temperature.errors|join:', ' }}</div>
+                            {% endif %}
+                            <div class="form-text">Temperature in Celsius for the chelation process</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="chelating_agent" class="form-label">Chelating Agent*</label>
+                            <select class="form-select {% if form.chelating_agent.errors %}is-invalid{% endif %}" 
+                                    id="chelating_agent" name="chelating_agent" required>
+                                <option value="">Select a chelating agent</option>
+                                {% for choice in form.fields.chelating_agent.queryset %}
+                                <option value="{{ choice.id }}" {% if form.chelating_agent.value|stringformat:'s' == choice.id|stringformat:'s' %}selected{% endif %}>
+                                    {{ choice.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.chelating_agent.errors %}
+                            <div class="invalid-feedback">{{ form.chelating_agent.errors|join:', ' }}</div>
+                            {% endif %}
+                            <div class="form-text">Chelating agent used</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="chelating_agent_amount" class="form-label">Chelating Agent Amount (g)*</label>
+                            <input type="number" step="0.01" class="form-control {% if form.chelating_agent_amount.errors %}is-invalid{% endif %}" 
+                                   id="chelating_agent_amount" name="chelating_agent_amount" value="{{ form.chelating_agent_amount.value|default:'' }}" required>
+                            {% if form.chelating_agent_amount.errors %}
+                            <div class="invalid-feedback">{{ form.chelating_agent_amount.errors|join:', ' }}</div>
+                            {% endif %}
+                            <div class="form-text">Amount of chelating agent in grams</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="process" class="form-label">Process*</label>
+                            <textarea class="form-control {% if form.process.errors %}is-invalid{% endif %}" 
+                                      id="process" name="process" rows="4" required>{{ form.process.value|default:'' }}</textarea>
+                            {% if form.process.errors %}
+                            <div class="invalid-feedback">{{ form.process.errors|join:', ' }}</div>
+                            {% endif %}
+                            <div class="form-text">Step by step process for creating the chelated mineral</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea class="form-control {% if form.notes.errors %}is-invalid{% endif %}" 
+                                      id="notes" name="notes" rows="3">{{ form.notes.value|default:'' }}</textarea>
+                            {% if form.notes.errors %}
+                            <div class="invalid-feedback">{{ form.notes.errors|join:', ' }}</div>
+                            {% endif %}
+                            <div class="form-text">Additional notes or observations (optional)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'foliarrecipes:chelatedmineral_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// Form validation
+(function () {
+    'use strict'
+    
+    // Fetch all the forms we want to apply custom Bootstrap validation styles to
+    var forms = document.querySelectorAll('.needs-validation')
+    
+    // Loop over them and prevent submission
+    Array.prototype.slice.call(forms)
+        .forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                
+                form.classList.add('was-validated')
+            }, false)
+        })
+})()
+</script>
+{% endblock %}
+{% endblock %}
+{% endwith %}

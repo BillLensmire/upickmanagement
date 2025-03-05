@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if beneficial %}Edit{% else %}Create{% endif %} Beneficial Organism - You Pick Manager{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'beneficials:list' %}">Beneficial Organisms</a></li>
+            <li class="breadcrumb-item active">{% if beneficial %}Edit{% else %}Create{% endif %} Beneficial Organism</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% if beneficial %}Edit{% else %}Create{% endif %} Beneficial Organism</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Common Name</label>
+                                    <input type="text" class="form-control" id="name" name="name" 
+                                           value="{{ beneficial.name|default:'' }}" required>
+                                    <div class="invalid-feedback">Please enter a common name.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="species" class="form-label">Scientific Name</label>
+                                    <input type="text" class="form-control" id="species" name="species" 
+                                           value="{{ beneficial.species|default:'' }}">
+                                    <div class="form-text">Optional scientific name or species</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="type" class="form-label">Type</label>
+                                    <select class="form-select" id="type" name="type" required>
+                                        <option value="">Select a type</option>
+                                        {% for type_code, type_label in form.fields.type.choices %}
+                                        <option value="{{ type_code }}" {% if beneficial.type == type_code %}selected{% endif %}>
+                                            {{ type_label }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="invalid-feedback">Please select a type.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="active_from_month" class="form-label">Active From</label>
+                                    <select class="form-select" id="active_from_month" name="active_from_month" required>
+                                        <option value="">Select a month</option>
+                                        {% for month_code, month_label in form.fields.active_from_month.choices %}
+                                        <option value="{{ month_code }}" {% if beneficial.active_from_month == month_code %}selected{% endif %}>
+                                            {{ month_label }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="invalid-feedback">Please select a starting month.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="active_to_month" class="form-label">Active To</label>
+                                    <select class="form-select" id="active_to_month" name="active_to_month" required>
+                                        <option value="">Select a month</option>
+                                        {% for month_code, month_label in form.fields.active_to_month.choices %}
+                                        <option value="{{ month_code }}" {% if beneficial.active_to_month == month_code %}selected{% endif %}>
+                                            {{ month_label }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="invalid-feedback">Please select an ending month.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="benefits" class="form-label">Benefits</label>
+                            <textarea class="form-control" id="benefits" name="benefits" rows="4" required>{{ beneficial.benefits|default:'' }}</textarea>
+                            <div class="invalid-feedback">Please describe the benefits of this organism.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="photo" class="form-label">Photo</label>
+                            {% if beneficial.photo %}
+                            <div class="mb-2">
+                                <img src="{{ beneficial.photo.url }}" alt="{{ beneficial.name }}" class="img-thumbnail" style="max-height: 200px;">
+                            </div>
+                            {% endif %}
+                            <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
+                            <div class="form-text">Optional photo of the beneficial organism</div>
+                        </div>
+
+                        <div class="text-end">
+                            <a href="{% url 'beneficials:list' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if beneficial %}Save Changes{% else %}Create Beneficial{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+
+    // Ensure active months are in logical order
+    const fromMonthSelect = document.getElementById('active_from_month');
+    const toMonthSelect = document.getElementById('active_to_month');
+
+    function updateMonthRanges() {
+        const fromMonth = parseInt(fromMonthSelect.value);
+        const toMonth = parseInt(toMonthSelect.value);
+
+        if (fromMonth && toMonth && toMonth < fromMonth) {
+            toMonthSelect.value = fromMonth;
+        }
+    }
+
+    fromMonthSelect.addEventListener('change', updateMonthRanges);
+    toMonthSelect.addEventListener('change', updateMonthRanges);
+});
+</script>
+{% endblock %}

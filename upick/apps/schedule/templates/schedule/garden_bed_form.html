@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% with page_app='schedule' page_name='garden_bed' page_action='form' %}
+{% block title %}{% if garden_bed %}Edit{% else %}Create{% endif %} Garden Bed - Garden Planner{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'schedule:garden_bed_list' %}{% if request.GET.year %}?year={{ request.GET.year }}{% endif %}">Garden Beds</a></li>
+            <li class="breadcrumb-item active">{% if garden_bed %}Edit{% else %}Create{% endif %} Garden Bed</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% if garden_bed %}Edit{% else %}Create{% endif %} Garden Bed</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <h5 class="alert-heading">Please correct the following errors:</h5>
+                            <ul class="mb-0">
+                                {% for field, errors in form.errors.items %}
+                                <li>{{ field|title }}: {{ errors|join:', ' }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name</label>
+                            <input type="text" class="form-control {% if form.name.errors %}is-invalid{% endif %}" 
+                                   id="name" name="name" value="{{ form.name.value|default:'' }}" required>
+                            <div class="invalid-feedback">
+                                {% if form.name.errors %}
+                                    {{ form.name.errors|join:', ' }}
+                                {% else %}
+                                    Please enter a name for the garden bed.
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="year" class="form-label">Year</label>
+                            <input type="number" class="form-control {% if form.year.errors %}is-invalid{% endif %}" 
+                                   id="year" name="year" value="{{ form.year.value|default:'' }}" 
+                                   min="2000" max="2100" step="1">
+                            <div class="invalid-feedback">
+                                {% if form.year.errors %}
+                                    {{ form.year.errors|join:', ' }}
+                                {% else %}
+                                    Please enter a valid year between 2000 and 2100.
+                                {% endif %}
+                            </div>
+                            <div class="form-text">Leave blank to not assign a specific year</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="width_feet" class="form-label">Width (feet)</label>
+                                    <input type="number" class="form-control {% if form.width_feet.errors %}is-invalid{% endif %}" 
+                                           id="width_feet" name="width_feet" value="{{ form.width_feet.value|default:'' }}" 
+                                           step="0.1" min="0.1" required>
+                                    <div class="invalid-feedback">
+                                        {% if form.width_feet.errors %}
+                                            {{ form.width_feet.errors|join:', ' }}
+                                        {% else %}
+                                            Please enter a valid width.
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="length_feet" class="form-label">Length (feet)</label>
+                                    <input type="number" class="form-control {% if form.length_feet.errors %}is-invalid{% endif %}" 
+                                           id="length_feet" name="length_feet" value="{{ form.length_feet.value|default:'' }}" 
+                                           step="0.1" min="0.1" required>
+                                    <div class="invalid-feedback">
+                                        {% if form.length_feet.errors %}
+                                            {{ form.length_feet.errors|join:', ' }}
+                                        {% else %}
+                                            Please enter a valid length.
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control {% if form.description.errors %}is-invalid{% endif %}" 
+                                      id="description" name="description" rows="3">{{ form.description.value|default:'' }}</textarea>
+                            {% if form.description.errors %}
+                            <div class="invalid-feedback">{{ form.description.errors|join:', ' }}</div>
+                            {% else %}
+                            <div class="form-text">Optional: Add any additional details about this garden bed.</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="text-end mt-4">
+                            <a href="{% url 'schedule:garden_bed_list' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if garden_bed %}Save Changes{% else %}Create Garden Bed{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+});
+</script>
+{% endblock %}
+{% endwith %}

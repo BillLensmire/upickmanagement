@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}{{ chelated_mineral.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ chelated_mineral.name }}</h1>
+        <div class="btn-group" role="group">
+            <a href="{% url 'foliarrecipes:chelatedmineral_edit' chelated_mineral.pk %}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            <a href="{% url 'foliarrecipes:chelatedmineral_delete' chelated_mineral.pk %}" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Delete
+            </a>
+            <a href="{% url 'foliarrecipes:chelatedmineral_list' %}" class="btn btn-secondary">
+                <i class="fas fa-list"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="card-title">Basic Information</h5>
+                    <dl class="row">
+                        <dt class="col-sm-4">Mineral Source</dt>
+                        <dd class="col-sm-8">{{ chelated_mineral.mineral_raw.name }}</dd>
+
+                        <dt class="col-sm-4">Primary Mineral</dt>
+                        <dd class="col-sm-8">{{ chelated_mineral.mineral_raw.mineral }}</dd>
+
+                        <dt class="col-sm-4">Mineral Amount</dt>
+                        <dd class="col-sm-8">{{ chelated_mineral.mineral_amount }} g</dd>
+
+                        <dt class="col-sm-4">Water Amount</dt>
+                        <dd class="col-sm-8">{{ chelated_mineral.water_amount }} L</dd>
+                    </dl>
+                </div>
+
+                <div class="col-md-6">
+                    <h5 class="card-title">Chelation Details</h5>
+                    <dl class="row">
+                        <dt class="col-sm-4">Chelating Agent</dt>
+                        <dd class="col-sm-8">{{ chelated_mineral.chelating_agent.name }}</dd>
+
+                        <dt class="col-sm-4">Agent Amount</dt>
+                        <dd class="col-sm-8">{{ chelated_mineral.chelating_agent_amount }} g</dd>
+
+                        <dt class="col-sm-4">Target pH</dt>
+                        <dd class="col-sm-8">{{ chelated_mineral.ph_target }}</dd>
+
+                        <dt class="col-sm-4">Temperature</dt>
+                        <dd class="col-sm-8">{{ chelated_mineral.temperature }}°C</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h5 class="card-title">Process</h5>
+                    <p class="card-text">{{ chelated_mineral.process|linebreaks }}</p>
+                </div>
+            </div>
+
+            {% if chelated_mineral.notes %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h5 class="card-title">Notes</h5>
+                    <p class="card-text">{{ chelated_mineral.notes|linebreaks }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h5 class="card-title">Metadata</h5>
+                    <dl class="row">
+                        <dt class="col-sm-2">Created</dt>
+                        <dd class="col-sm-4">{{ chelated_mineral.created_at|date:"F j, Y, g:i a" }}</dd>
+
+                        <dt class="col-sm-2">Last Updated</dt>
+                        <dd class="col-sm-4">{{ chelated_mineral.updated_at|date:"F j, Y, g:i a" }}</dd>
+
+                        {% if chelated_mineral.group %}
+                        <dt class="col-sm-2">Group</dt>
+                        <dd class="col-sm-4">{{ chelated_mineral.group.name }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

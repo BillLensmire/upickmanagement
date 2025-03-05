@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Nutrient Notes Help{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h2>Nutrient Notes Help</h2>
+                </div>
+                <div class="card-body">
+                    <h3>About Nutrient Notes</h3>
+                    <p>
+                        Nutrient notes allow you to record important information about plant nutrients, including research findings, 
+                        observations, and application tips. This information can be linked to specific nutrients or kept as general reference.
+                    </p>
+
+                    <h3>Formatting Tips</h3>
+                    <p>The content field supports basic formatting to help organize your notes:</p>
+                    
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h4>Text Formatting</h4>
+                        </div>
+                        <div class="card-body">
+                            <ul>
+                                <li><strong>Lists:</strong> Use hyphens or asterisks at the beginning of lines to create bullet points</li>
+                                <li><strong>Headings:</strong> Use # symbols for headings (# Main Heading, ## Subheading)</li>
+                                <li><strong>Emphasis:</strong> Use *asterisks* for italic text and **double asterisks** for bold text</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h4>Nutrient Information</h4>
+                        </div>
+                        <div class="card-body">
+                            <p>When documenting nutrient information, consider including:</p>
+                            <ul>
+                                <li>Application rates and timing</li>
+                                <li>Observed plant responses</li>
+                                <li>Interactions with other nutrients</li>
+                                <li>Soil conditions that affect availability</li>
+                                <li>Sources and forms of the nutrient</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h4>Citing Sources</h4>
+                        </div>
+                        <div class="card-body">
+                            <p>Use the source field to record where you found the information. This could be:</p>
+                            <ul>
+                                <li>Research papers or journal articles</li>
+                                <li>Books or publications</li>
+                                <li>Websites (include the URL)</li>
+                                <li>Personal observations (include dates)</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <h4>Pro Tip</h4>
+                        <p>Link your notes to specific nutrients when possible to build a comprehensive knowledge base for each mineral or nutrient in your garden planning.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

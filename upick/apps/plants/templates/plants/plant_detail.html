@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ plant.name }} - You Pick Manager{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'plants:list' %}">Plants</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ plant.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+            <h1>{{ plant.name }}</h1>
+            {% if plant.variety_name %}
+            <h4 class="text-muted">{{ plant.variety_name }}</h4>
+            {% endif %}
+                </div>
+                <div>
+                    <a href="{% url 'plants:edit' plant.pk %}" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Edit Plant
+                    </a>
+                    <a href="{% url 'plants:plant_variety_create' plant.pk %}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Add Variety
+                    </a>
+                </div>
+            </div>
+            
+            {% if plant.scientific_name %}
+            <p class="font-italic">{{ plant.scientific_name }}</p>
+            {% endif %}
+            
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <ul class="list-unstyled">
+                        <li><strong>Type:</strong> {{ plant.get_seed_type_display }}</li>
+                        <li><strong>Planting Method:</strong> {{ plant.get_planting_method_display }}</li>
+                    </ul>
+                    <h5>Growing Timeline</h5>
+                    <ul class="list-unstyled">
+                        {% if plant.days_to_germinate %}
+                        <li><strong>Days to Germinate:</strong> {{ plant.days_to_germinate }}</li>
+                        {% endif %}
+                        {% if plant.days_to_maturity %}
+                        <li><strong>Days to Maturity:</strong> {{ plant.days_to_maturity }}</li>
+                        {% endif %}
+                        {% if plant.days_from_seed_to_transplant %}
+                        <li><strong>Days from Seed to Transplant:</strong> {{ plant.days_from_seed_to_transplant }}</li>
+                        {% endif %}
+                        {% if plant.days_from_frost_to_transplant %}
+                        <li><strong>Days After Last Frost to Transplant:</strong> {{ plant.days_from_frost_to_transplant }}</li>
+                        {% endif %}
+                        {% if plant.germination_temp_min and plant.germination_temp_max %}
+                        <li><strong>Germination Temperature:</strong> {{ plant.germination_temp_min }}°F - {{ plant.germination_temp_max }}°F</li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5>Spacing</h5>
+                    <ul class="list-unstyled">
+                        <li><strong>Between Plants:</strong> {{ plant.spacing_between_plants }}"</li>
+                        <li><strong>Between Rows:</strong> {{ plant.spacing_between_rows }}"</li>
+                        <li><strong>Height at Maturity:</strong> {{ plant.height_inches }}"</li>
+                    </ul>
+                </div>
+            </div>
+
+            {% if companion_plants %}
+            <div class="mb-4">
+                <h5>Companion Plants</h5>
+                <div class="row">
+                    {% for companion in companion_plants %}
+                    <div class="col-md-4 mb-2">
+                        <a href="{% url 'plants:detail' companion.pk %}" class="text-decoration-none">
+                            {{ companion.name }}
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if varieties %}
+            <div class="mb-4">
+                <h5>Varieties</h5>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Planting Season</th>
+                                <th>Days to Maturity</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for variety in varieties %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'plants:variety_detail' variety.pk %}">
+                                        {{ variety.variety_name }}
+                                    </a>
+                                </td>
+                                <td>{{ variety.get_variety_planting_season_display }}</td>
+                                <td>{{ variety.variety_days_to_maturity|default:"-" }}</td>
+                                <td>
+                                    <a href="{% url 'plants:variety_edit' variety.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Quick Facts</h5>
+                    <ul class="list-unstyled">
+                        <li><strong>Season:</strong> {{ plant.get_planting_season_display }}</li>
+                        <li><strong>Type:</strong> {% if plant.is_perennial %}Perennial{% else %}Annual{% endif %}</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Notes</h5>
+                    <p class="card-text">{{ plant.description|linebreaks }}</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Research Notes</h5>
+                    <p class="card-text">{{ plant.research_notes|linebreaks }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

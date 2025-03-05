@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags crispy_forms_filters %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Add{% endif %} Plant{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">{% if form.instance.pk %}Edit{% else %}Add{% endif %} Plant</h2>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="form">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <!-- Basic Information -->
+                            <div class="col-md-6">
+                                {{ form.name|as_crispy_field }}
+                                {{ form.seed_type|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.is_perennial|as_crispy_field }}
+                                {{ form.height_inches|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                {{ form.description|as_crispy_field }}
+                                {{ form.research_notes|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <!-- Growing Requirements -->
+                        <h4 class="mt-4">Growing Requirements</h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.planting_method|as_crispy_field }}
+                                {{ form.spacing_between_plants|as_crispy_field }}
+                                {{ form.spacing_between_rows|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <!-- Timing -->
+                        <h4 class="mt-4">Timing</h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.days_to_germinate|as_crispy_field }}
+                                {{ form.days_to_maturity|as_crispy_field }}
+                                {{ form.days_from_seed_to_transplant|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.germination_temp_min|as_crispy_field }}
+                                {{ form.germination_temp_max|as_crispy_field }}
+                                {{ form.days_from_frost_to_transplant|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <!-- Companion Plants -->
+                        <h4 class="mt-4">Companion Plants</h4>
+                        <div class="row">
+                            <div class="col-12">
+                                {{ form.companion_plants|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                {% if form.instance.pk %}Update{% else %}Create{% endif %} Plant
+                            </button>
+                            <a href="{% url 'plants:list' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

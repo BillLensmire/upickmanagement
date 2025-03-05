@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% with page_app='produceplanner' page_name='overview' page_action='list' %}
+{% block title %}Produce Plans - You Pick Manager{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Produce Plans</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'produceplanner:overview_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create Plan
+            </a>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Garden Plan</th>
+                    <th>Year</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for overview in overviews %}
+                <tr class="clickable-row" data-href="{% url 'produceplanner:overview_detail' overview.pk %}">
+                    <td>
+                        <a href="{% url 'planning:garden_plan_detail' overview.garden_plan.id %}" class="text-decoration-none">{{ overview.garden_plan.name }}</a>
+                    </td>
+                    <td>{{ overview.garden_plan.year }}</td>
+                    <td>{{ overview.overall_start_date|date:"M j, Y" }}</td>
+                    <td>{{ overview.overall_end_date|date:"M j, Y" }}</td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <a href="{% url 'produceplanner:overview_detail' overview.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                            <a href="{% url 'produceplanner:overview_update' overview.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            <a href="{% url 'produceplanner:produce_availability_report' overview.pk %}" class="btn btn-sm btn-outline-info">Report</a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">No produce plans found. Create one to get started!</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+    .clickable-row {
+        cursor: pointer;
+    }
+    .clickable-row:hover {
+        background-color: rgba(0,0,0,.075);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.clickable-row').forEach(row => {
+            row.addEventListener('click', function(e) {
+                // Don't navigate if clicking on a button or link
+                if (!e.target.closest('a') && !e.target.closest('button')) {
+                    window.location.href = this.dataset.href;
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}
+{% endwith %}

@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+
+{% with page_app='schedule' page_name='schedule' page_action='form' %}
+{% block title %}{% if schedule %}Edit{% else %}Create{% endif %} Schedule - Garden Planner{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'schedule:list' %}">Schedule</a></li>
+            <li class="breadcrumb-item active">{% if schedule %}Edit{% else %}Create{% endif %} Schedule</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% if schedule %}Edit{% else %}Create{% endif %} Planting Schedule</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        {% if selected_year %}
+                        <input type="hidden" name="selected_year" value="{{ selected_year }}">
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <label for="garden_plan" class="form-label">Garden Plan Year</label>
+                            <select name="garden_plan" id="garden_plan" class="form-select" required>
+                                <option value="">Select a Garden Plan</option>
+                                {% for plan in garden_plans %}
+                                <option value="{{ plan.id }}" {% if schedule and schedule.garden_plan.id == plan.id %}selected{% endif %}>
+                                    {{ plan.name }} ({{ plan.year }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">Please select a garden plan.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="garden_bed" class="form-label">Garden Bed</label>
+                            <select name="garden_bed" id="garden_bed" class="form-select" required>
+                                <option value="">Select a Garden Bed</option>
+                                {% for bed in garden_beds %}
+                                <option value="{{ bed.id }}" {% if schedule and schedule.garden_bed.id == bed.id %}selected{% endif %}>
+                                    {{ bed.name }} ({{ bed.width_feet }}' x {{ bed.length_feet }}')
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">Please select a garden bed.</div>
+                            {% if selected_year %}
+                            <small class="text-muted">Showing garden beds for year {{ selected_year }}</small>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="variety" class="form-label">Variety</label>
+                            <select name="variety" id="variety" class="form-select" required>
+                                <option value="">Select a Variety</option>
+                                {% for variety in varieties %}
+                                <option value="{{ variety.id }}" {% if schedule and schedule.variety.id == variety.id %}selected{% endif %}>
+                                    {% if variety.variety_plant %}{{ variety.variety_plant.name }} - {% endif %}{{ variety.variety_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">Please select a variety.</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="quantity" class="form-label">Quantity</label>
+                                    <input type="number" class="form-control" id="quantity" name="quantity" 
+                                           value="{{ schedule.quantity|default:'1' }}" min="1" required>
+                                    <div class="invalid-feedback">Please enter a valid quantity.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="rows" class="form-label">Number of Rows</label>
+                                    <input type="number" class="form-control" id="rows" name="rows" 
+                                           value="{{ schedule.rows|default:'1' }}" min="1"
+                                           required>
+                                    <div class="invalid-feedback">Please enter a valid number of rows.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if schedule %}
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select name="status" id="status" class="form-select" required>
+                                {% for status_code, status_label in status_choices %}
+                                <option value="{{ status_code }}" {% if status_code == schedule.status %}selected{% endif %}>
+                                    {{ status_label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="inside_planting_date" class="form-label">Inside Planting Date</label>
+                                    <input type="date" class="form-control" id="inside_planting_date" 
+                                           name="inside_planting_date" value="{% if schedule.inside_planting_date %}{{ schedule.inside_planting_date|date:'Y-m-d' }}{% endif %}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="outside_planting_date" class="form-label">Outside Planting Date</label>
+                                    <input type="date" class="form-control" id="outside_planting_date" 
+                                           name="outside_planting_date" value="{% if schedule.outside_planting_date %}{{ schedule.outside_planting_date|date:'Y-m-d' }}{% endif %}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="harvest_date" class="form-label">Expected Harvest Date</label>
+                                    <input type="date" class="form-control" id="harvest_date" 
+                                           name="harvest_date" value="{% if schedule.harvest_date %}{{ schedule.harvest_date|date:'Y-m-d' }}{% endif %}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3">{{ schedule.notes|default:'' }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="location_notes" class="form-label">Location Notes</label>
+                            <textarea class="form-control" id="location_notes" name="location_notes" rows="2">{{ schedule.location_notes|default:'' }}</textarea>
+                            <div class="form-text">Describe where in the bed this will be planted.</div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'schedule:list' %}" class="btn btn-secondary me-md-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Variety data for date calculations
+const varietiesData = {{ varieties_data|safe }};
+const gardenPlans = {{ garden_plans_json|safe }};
+const allVarieties = {{ varieties_json|safe }};
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+
+    // Date handling
+    const insideDateInput = document.getElementById('inside_planting_date');
+    const outsideDateInput = document.getElementById('outside_planting_date');
+    const harvestDateInput = document.getElementById('harvest_date');
+    const varietySelect = document.getElementById('variety');
+    const gardenPlanSelect = document.getElementById('garden_plan');
+
+    function calculatePlantingDates(harvestDate, varietyId) {
+        if (!harvestDate || !varietyId || !varietiesData[varietyId]) return;
+
+        const variety = varietiesData[varietyId];
+        const harvestDateObj = new Date(harvestDate);
+        let outsideDateObj, insideDateObj;
+
+        // Calculate outside planting date based on days to maturity
+        if (variety.days_to_maturity) {
+            outsideDateObj = new Date(harvestDateObj);
+            outsideDateObj.setDate(harvestDateObj.getDate() - variety.days_to_maturity);
+            outsideDateInput.value = outsideDateObj.toISOString().split('T')[0];
+        }
+
+        // For transplants, calculate inside planting date
+        if (variety.planting_method === 'TRANSPLANT' && variety.days_from_seed_to_transplant && outsideDateObj) {
+            insideDateObj = new Date(outsideDateObj);
+            insideDateObj.setDate(outsideDateObj.getDate() - variety.days_from_seed_to_transplant);
+            insideDateInput.value = insideDateObj.toISOString().split('T')[0];
+        }
+    }
+
+    // Update dates when harvest date changes
+    harvestDateInput.addEventListener('change', function() {
+        const varietyId = varietySelect.value;
+        if (varietyId) {
+            calculatePlantingDates(this.value, varietyId);
+        }
+    });
+
+    // Update dates when variety selection changes and harvest date is set
+    varietySelect.addEventListener('change', function() {
+        if (harvestDateInput.value) {
+            calculatePlantingDates(harvestDateInput.value, this.value);
+        }
+    });
+
+    // Ensure dates are in logical order
+    insideDateInput.addEventListener('change', function() {
+        if (this.value) {
+            outsideDateInput.min = this.value;
+        }
+    });
+
+    outsideDateInput.addEventListener('change', function() {
+        if (this.value) {
+            if (insideDateInput.value) {
+                this.min = insideDateInput.value;
+            }
+            harvestDateInput.min = this.value;
+        }
+    });
+
+    harvestDateInput.addEventListener('change', function() {
+        if (this.value && outsideDateInput.value) {
+            this.min = outsideDateInput.value;
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endwith %}

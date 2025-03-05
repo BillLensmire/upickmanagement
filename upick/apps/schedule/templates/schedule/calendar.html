@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+
+{% with page_app='schedule' page_name='schedule' page_action='calendar' %}
+{% block title %}Calendar - You Pick Manager{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Planting Calendar</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <button id="exportBtn" class="btn btn-outline-primary">
+                <i class="fas fa-file-pdf"></i> Create PDF For This Month
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Filter</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <div class="form-check">
+                            <input class="form-check-input filter-status" type="checkbox" value="PLANNED" id="statusPlanned" checked>
+                            <label class="form-check-label" for="statusPlanned">
+                                Planned
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input filter-status" type="checkbox" value="PLANTED" id="statusPlanted" checked>
+                            <label class="form-check-label" for="statusPlanted">
+                                Planted
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input filter-status" type="checkbox" value="HARVESTED" id="statusHarvested" checked>
+                            <label class="form-check-label" for="statusHarvested">
+                                Harvested
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Garden Beds</label>
+                        {% for bed in garden_beds %}
+                        <div class="form-check">
+                            <input class="form-check-input filter-bed" type="checkbox" value="{{ bed.id }}" id="bed{{ bed.id }}" checked>
+                            <label class="form-check-label" for="bed{{ bed.id }}">
+                                {{ bed.name }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Event Types</label>
+                        <div class="form-check">
+                            <input class="form-check-input filter-type" type="checkbox" value="inside" id="typeInside" checked>
+                            <label class="form-check-label" for="typeInside">
+                                Inside Planting
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input filter-type" type="checkbox" value="outside" id="typeOutside" checked>
+                            <label class="form-check-label" for="typeOutside">
+                                Outside Planting
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input filter-type" type="checkbox" value="harvest" id="typeHarvest" checked>
+                            <label class="form-check-label" for="typeHarvest">
+                                Harvest
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Legend</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="me-2" style="width: 20px; height: 20px; background-color: #198754;"></div>
+                        <span>Inside Planting</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="me-2" style="width: 20px; height: 20px; background-color: #0d6efd;"></div>
+                        <span>Outside Planting</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="me-2" style="width: 20px; height: 20px; background-color: #ffc107;"></div>
+                        <span>Harvest</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-body">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% endwith %}
+
+{% block extra_js %}
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    var exportBtn = document.getElementById('exportBtn');
+    var currentDate;
+
+    // Handle export button click
+    exportBtn.addEventListener('click', function() {
+        if (currentDate) {
+            const month = currentDate.getMonth() + 1; // getMonth() returns 0-11
+            const year = currentDate.getFullYear();
+            window.location.href = `{% url 'schedule:export_calendar' %}?month=${month}&year=${year}`;
+        }
+    });
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        datesSet: function(info) {
+            currentDate = info.view.currentStart;
+        },
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek'
+        },
+        events: function(info, successCallback, failureCallback) {
+            // Get filter values
+            const selectedStatus = Array.from(document.querySelectorAll('.filter-status:checked')).map(cb => cb.value);
+            const selectedBeds = Array.from(document.querySelectorAll('.filter-bed:checked')).map(cb => cb.value);
+            const selectedTypes = Array.from(document.querySelectorAll('.filter-type:checked')).map(cb => cb.value);
+
+            // Fetch events from our API
+            fetch(`/schedule/api/events/?start=${info.startStr}&end=${info.endStr}&status=${selectedStatus.join(',')}&beds=${selectedBeds.join(',')}&types=${selectedTypes.join(',')}`)
+                .then(response => response.json())
+                .then(data => {
+                    successCallback(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching events:', error);
+                    failureCallback(error);
+                });
+        },
+        eventClick: function(info) {
+            window.location.href = `/schedule/${info.event.id}/`;
+        },
+        eventContent: function(arg) {
+            return {
+                html: `
+                    <div class="fc-content">
+                        <div class="fc-title">${arg.event.title}</div>
+                        <div class="fc-description small">${arg.event.extendedProps.description || ''}</div>
+                    </div>
+                `
+            };
+        }
+    });
+    calendar.render();
+
+    // Add event listeners for filters
+    document.querySelectorAll('.filter-status, .filter-bed, .filter-type').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            calendar.refetchEvents();
+        });
+    });
+});
+</script>
+<style>
+.fc-event {
+    cursor: pointer;
+}
+.fc-event.inside-planting {
+    background-color: #198754;
+    border-color: #198754;
+}
+.fc-event.outside-planting {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+.fc-event.harvest {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #000;
+}
+</style>
+{% endblock %}

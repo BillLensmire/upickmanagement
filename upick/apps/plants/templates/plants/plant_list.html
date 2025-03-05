@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Plants - You Pick Manager{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>Plants</h1>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'plants:create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Plant
+        </a>
+    </div>
+        <form method="get" action="{% url 'plants:search' %}" class="mb-4" id="plantSearchForm">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <select name="type" class="form-select search-input">
+                        <option value="">All Types</option>
+                        <option value="VEGETABLE" {% if selected_type == 'VEGETABLE' %}selected{% endif %}>Vegetable</option>
+                        <option value="COVER_CROP" {% if selected_type == 'COVER_CROP' %}selected{% endif %}>Cover Crop</option>
+                        <option value="FLOWER" {% if selected_type == 'FLOWER' %}selected{% endif %}>Flower</option>
+                        <option value="FRUIT_TREE" {% if selected_type == 'FRUIT_TREE' %}selected{% endif %}>Fruit Tree</option>
+                        <option value="PERENNIAL" {% if selected_type == 'PERENNIAL' %}selected{% endif %}>Perennial</option>
+                        <option value="HERB" {% if selected_type == 'HERB' %}selected{% endif %}>Herb</option>
+                        <option value="CORN" {% if selected_type == 'CORN' %}selected{% endif %}>Corn</option>
+                    </select>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for plant in plants %}
+            <tr>
+                <td class="fw-bold">{{ plant.name }}</td>
+                <td><span class="badge bg-info">{{ plant.get_seed_type_display }}</span></td>
+                <td>
+                    <div class="btn-group" role="group">
+                        <a href="{% url 'plants:detail' plant.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                        &nbsp;&nbsp; &nbsp;
+                        <a href="{% url 'plants:edit' plant.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                        &nbsp;&nbsp; &nbsp;
+                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deletePlantModal{{ plant.pk }}">
+                            Delete
+                        </button>
+                    </div>
+                    <!-- Delete Modal -->
+                    <div class="modal fade" id="deletePlantModal{{ plant.pk }}" tabindex="-1" aria-labelledby="deletePlantModalLabel{{ plant.pk }}" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="deletePlantModalLabel{{ plant.pk }}">Confirm Delete</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    Are you sure you want to delete <strong>{{ plant.name }}</strong>? This action cannot be undone.
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <form action="{% url 'plants:delete' plant.pk %}" method="post" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center">No plants found matching your criteria.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add event listeners to all search inputs
+        document.querySelectorAll('.search-input').forEach(function(input) {
+            input.addEventListener('change', function() {
+                document.getElementById('plantSearchForm').submit();
+            });
+        });
+        
+        // For the text input, use input event with a delay
+        const textInput = document.querySelector('input[name="q"]');
+        let timeout = null;
+        textInput.addEventListener('input', function() {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                document.getElementById('plantSearchForm').submit();
+            }, 500); // Wait for 500ms after the user stops typing
+        });
+    });
+</script>
+{% endblock %}

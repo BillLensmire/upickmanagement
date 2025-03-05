@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}{{ supplier.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'foliarrecipes:supplier_list' %}">Suppliers</a></li>
+            <li class="breadcrumb-item active">{{ supplier.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ supplier.name }}</h1>
+        <div class="btn-group" role="group">
+            <a href="{% url 'foliarrecipes:supplier_edit' supplier.pk %}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            <a href="{% url 'foliarrecipes:supplier_delete' supplier.pk %}" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Delete
+            </a>
+            <a href="{% url 'foliarrecipes:supplier_list' %}" class="btn btn-secondary">
+                <i class="fas fa-list"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="card-title">Contact Information</h5>
+                    <dl class="row">
+                        <dt class="col-sm-4">Contact Name</dt>
+                        <dd class="col-sm-8">{{ supplier.contact_name|default:"Not specified" }}</dd>
+
+                        <dt class="col-sm-4">Email</dt>
+                        <dd class="col-sm-8">
+                            {% if supplier.contact_email %}
+                            <a href="mailto:{{ supplier.contact_email }}">{{ supplier.contact_email }}</a>
+                            {% else %}
+                            Not specified
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4">Phone</dt>
+                        <dd class="col-sm-8">{{ supplier.contact_phone|default:"Not specified" }}</dd>
+
+                        <dt class="col-sm-4">Website</dt>
+                        <dd class="col-sm-8">
+                            {% if supplier.website %}
+                            <a href="{{ supplier.website }}" target="_blank">{{ supplier.website }}</a>
+                            {% else %}
+                            Not specified
+                            {% endif %}
+                        </dd>
+                    </dl>
+                </div>
+
+                <div class="col-md-6">
+                    <h5 class="card-title">Account Details</h5>
+                    <dl class="row">
+                        <dt class="col-sm-4">Account Number</dt>
+                        <dd class="col-sm-8">{{ supplier.account_number|default:"Not specified" }}</dd>
+                    </dl>
+
+                    {% if supplier.shipping_notes %}
+                    <h5 class="card-title mt-4">Shipping Information</h5>
+                    <p class="card-text">{{ supplier.shipping_notes|linebreaks }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if supplier.notes %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h5 class="card-title">Additional Notes</h5>
+                    <p class="card-text">{{ supplier.notes|linebreaks }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if supplier.mineral_products.exists %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h5 class="card-title">Available Mineral Products</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Package Size</th>
+                                    <th>Price</th>
+                                    <th>Product Code</th>
+                                    <th>Last Updated</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in supplier.mineral_products.all %}
+                                <tr>
+                                    <td>{{ product.mineral_source.name }}</td>
+                                    <td>{{ product.package_size }} {{ product.package_unit }}</td>
+                                    <td>${{ product.price }}</td>
+                                    <td>{{ product.product_code|default:"N/A" }}</td>
+                                    <td>{{ product.last_price_update }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if supplier.chelating_products.exists %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h5 class="card-title">Available Chelating Products</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Package Size</th>
+                                    <th>Price</th>
+                                    <th>Product Code</th>
+                                    <th>Last Updated</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in supplier.chelating_products.all %}
+                                <tr>
+                                    <td>{{ product.chelating_agent.name }}</td>
+                                    <td>{{ product.package_size }} {{ product.package_unit }}</td>
+                                    <td>${{ product.price }}</td>
+                                    <td>{{ product.product_code|default:"N/A" }}</td>
+                                    <td>{{ product.last_price_update }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
