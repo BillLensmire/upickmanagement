@@ -1,0 +1,17 @@
+[Unit]
+Description=Gunicorn daemon for Upick Django Application
+After=network.target
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/upick
+ExecStart=/var/www/upickmanagement/.venv/bin/gunicorn --config /var/www/upickmanagement/gunicorn_config.py upick.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=on-failure
+RestartSec=5s
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
