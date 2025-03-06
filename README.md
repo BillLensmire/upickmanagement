@@ -16,6 +16,7 @@ It provides tools for:
 - Garden Logs
 - Reminders
 
+
 ## 📋 Table of Contents
 
 - [Features](#features)
