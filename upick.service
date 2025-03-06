@@ -4,7 +4,7 @@ After=network.target
 [Service]
 User=www-data
 Group=www-data
-WorkingDirectory=/var/www/upick
+WorkingDirectory=/var/www/upickmanagement/upick
 ExecStart=/var/www/upickmanagement/.venv/bin/gunicorn --config /var/www/upickmanagement/gunicorn_config.py upick.wsgi:application
 ExecReload=/bin/kill -s HUP $MAINPID
 Restart=on-failure

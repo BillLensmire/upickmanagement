@@ -21,7 +21,7 @@ sudo apt upgrade -y
 ### 2. Install Required Packages
 
 ```bash
-sudo apt install -y python3 python3-pip python3-venv nginx certbot python3-certbot-nginx
+sudo apt install -y python3 python3-pip python3-venv nginx certbot python3-certbot-nginx libpango-1.0-0 libpangoft2-1.0-0
 ```
 
 ## Application Deployment
@@ -37,7 +37,7 @@ sudo chown -R www-data:www-data /var/www/upickmanagement
 
 Option 1: Clone from Git (if using version control):
 ```bash
-git clone https://github.com/BillLensmire/youpickmanager.git /var/www/upickmanagement
+git clone https://github.com/BillLensmire/upickmanagement.git /var/www/upickmanagement
 ```
 
 sudo chown -R www-data:www-data /var/www/upickmanagement
@@ -48,7 +48,7 @@ sudo chown -R www-data:www-data /var/www/upickmanagement
 cd /var/www/upickmanagement
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r upick/requirements.txt
 ```
 
 ### 4. Configure Environment Variables
@@ -92,6 +92,7 @@ cd /var/www/upickmanagement
 source .venv/bin/activate
 
 # Apply migrations
+python3 manage.py makemigrations
 python3 manage.py migrate --settings=upick.settings_production
 
 # Collect static files
