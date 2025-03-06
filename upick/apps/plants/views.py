@@ -23,6 +23,9 @@ class PlantListView(ListView):
     template_name = 'plants/plant_list.html'
     context_object_name = 'plants'
 
+    def get_queryset(self):
+        return Plant.objects.filter(group__in=self.request.user.groups.all())
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['seed_types'] = dict(Plant._meta.get_field('seed_type').choices)
@@ -135,6 +138,9 @@ class PlantUpdateView(LoginRequiredMixin, UpdateView):
     def get_success_url(self):
         return reverse_lazy('plants:detail', kwargs={'pk': self.object.pk})
 
+    def get_cancel_url(self):
+        return reverse_lazy('plants:detail', kwargs={'pk': self.object.pk})
+
     def form_valid(self, form):
         messages.success(self.request, 'Plant updated successfully!')
         return super().form_valid(form)
@@ -162,9 +168,12 @@ class VarietyListView(ListView):
     template_name = 'plants/variety_list.html'
     context_object_name = 'varieties'
 
+    def get_queryset(self):
+        return Variety.objects.filter(group__in=self.request.user.groups.all())
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['plant_list'] = Plant.objects.all()
+        context['plant_list'] = Plant.objects.filter(group__in=self.request.user.groups.all())
         context['page_app'] = 'plants'
         context['page_name'] = 'variety'
         context['page_action'] = 'list'

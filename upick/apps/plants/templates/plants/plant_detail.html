@@ -111,6 +111,30 @@
                                     <a href="{% url 'plants:variety_edit' variety.pk %}" class="btn btn-sm btn-outline-primary">
                                         <i class="fas fa-edit"></i>
                                     </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteVarietyModal{{ variety.pk }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <!-- Delete Modal -->
+                                    <div class="modal fade" id="deleteVarietyModal{{ variety.pk }}" tabindex="-1" aria-labelledby="deleteVarietyModalLabel{{ variety.pk }}" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="deleteVarietyModalLabel{{ variety.pk }}">Confirm Delete</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    Are you sure you want to delete <strong>{{ variety.variety_name }}</strong>? This action cannot be undone.
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <form action="{% url 'plants:variety_delete' variety.pk %}" method="post" style="display: inline;">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </td>
                             </tr>
                             {% endfor %}

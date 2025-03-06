@@ -30,7 +30,7 @@ def log_list(request):
     entry_type = request.GET.get('type', '')
     search_query = request.GET.get('search', '')
     
-    logs = LogEntry.objects.all().order_by('-updated_at')
+    logs = LogEntry.objects.filter(group__in=request.user.groups.all()).order_by('-updated_at')
     
     if entry_type:
         logs = logs.filter(entry_type=entry_type)
