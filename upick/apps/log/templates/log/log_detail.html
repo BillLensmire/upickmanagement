@@ -105,13 +105,15 @@
                 <h5>Attachments</h5>
                 {% if log_entry.photo %}
                 <div class="mb-3">
-                    <img src="{{ log_entry.photo.url }}" alt="Log Entry Photo" class="img-fluid rounded" style="max-width: 300px">
+                    <a href="{{ log_entry.photo.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                        <i class="fas fa-eye"></i> <img src="{{ log_entry.photo.url }}" alt="Log Entry Photo" class="img-fluid rounded" style="max-width: 300px">
+                    </a>
                 </div>
                 {% endif %}
                 {% if log_entry.document %}
                 <div>
                     <a href="{{ log_entry.document.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
-                        <i class="fas fa-file"></i> View Document
+                        <i class="fas fa-eye"></i> {{ document_filename }}
                     </a>
                 </div>
                 {% endif %}

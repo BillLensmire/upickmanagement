@@ -59,7 +59,9 @@ def log_list(request):
 @login_required
 def log_detail(request, pk):
     log_entry = get_object_or_404(LogEntry, pk=pk)
-    return render(request, 'log/log_detail.html', {'log_entry': log_entry})
+
+    document_filename = log_entry.document.name.split('/')[-1] if log_entry.document else None
+    return render(request, 'log/log_detail.html', {'log_entry': log_entry, 'document_filename': document_filename})
 
 @login_required
 def log_create(request):
