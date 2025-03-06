@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block title %}List: {{ todo_list.title }} - You Pick Manager{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Todo List Details</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="btn-group">
+                <a href="{% url 'schedule:todo_list_update' todo_list.id %}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Edit List
+                </a>
+                <button type="button" class="btn btn-danger" onclick="confirmDelete('{{ todo_list.id }}', '{{ todo_list.title }}')">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{{ todo_list.title }}</h5>
+                </div>
+                <div class="card-body">
+                    {% if todo_list.description %}
+                    <div class="mb-4">
+                        <h6>Description:</h6>
+                        <p>{{ todo_list.description|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">Progress:</h6>
+                            <span class="badge bg-secondary">{{ completion_percentage }}% Complete</span>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: {{ completion_percentage }}%;" 
+                                 aria-valuenow="{{ completion_percentage }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                                {{ completion_percentage }}%
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">Tasks:</h6>
+                            <a href="{% url 'schedule:todo_task_create' %}" class="btn btn-sm btn-success">
+                                <i class="fas fa-plus"></i> Add Task
+                            </a>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Status</th>
+                                        <th>Priority</th>
+                                        <th>Due Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for task in tasks %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'schedule:todo_task_detail' task.id %}">
+                                                {{ task.title }}
+                                            </a>
+                                            {% if task.description %}
+                                            <br>
+                                            <small class="text-muted">{{ task.description|truncatechars:50 }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if task.status == 'COMPLETED' %}
+                                                <span class="badge bg-success">{{ task.get_status_display }}</span>
+                                            {% elif task.status == 'IN_PROGRESS' %}
+                                                <span class="badge bg-primary">{{ task.get_status_display }}</span>
+                                            {% elif task.status == 'CANCELLED' %}
+                                                <span class="badge bg-secondary">{{ task.get_status_display }}</span>
+                                            {% else %}
+                                                <span class="badge bg-light text-dark">{{ task.get_status_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if task.priority == 'HIGH' %}
+                                                <span class="badge bg-danger">{{ task.get_priority_display }}</span>
+                                            {% elif task.priority == 'MEDIUM' %}
+                                                <span class="badge bg-warning text-dark">{{ task.get_priority_display }}</span>
+                                            {% else %}
+                                                <span class="badge bg-info text-dark">{{ task.get_priority_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if task.due_date %}
+                                                {{ task.due_date }}
+                                            {% else %}
+                                                <span class="text-muted">Not set</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a href="{% url 'schedule:todo_task_update' task.id %}" 
+                                                   class="btn btn-sm btn-outline-primary" 
+                                                   title="Edit task">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="{% url 'schedule:todo_task_detail' task.id %}" 
+                                                   class="btn btn-sm btn-outline-secondary" 
+                                                   title="View task details">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                        onclick="confirmDelete('{{ task.id }}', '{{ task.title }}')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4">
+                                            <div class="alert alert-info mb-0">
+                                                No tasks in this list yet. Click "Add Task" to add one!
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Created:</strong> {{ todo_list.created_at|date:"F j, Y, g:i a" }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Last Updated:</strong> {{ todo_list.updated_at|date:"F j, Y, g:i a" }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete the todo list "<span id="listName"></span>"?
+                This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete(listId, listName) {
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    document.getElementById('listName').textContent = listName;
+    document.getElementById('deleteForm').action = "{% url 'schedule:todo_list_delete' 0 %}".replace('0', listId);
+    modal.show();
+}
+</script>
+{% endblock %}

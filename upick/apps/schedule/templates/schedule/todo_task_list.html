@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block title %}Todo Tasks - You Pick Manager{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Todo Tasks</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'schedule:todo_task_create' %}" class="btn btn-success">
+                <i class="fas fa-plus"></i> New Task
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <form method="get" class="form-inline">
+                <div class="row">
+                    <div class="col-md-4 mb-2">
+                        <div class="input-group">
+                            <label class="input-group-text" for="statusSelect">Status</label>
+                            <select class="form-select" id="statusSelect" name="status">
+                                <option value="">All Statuses</option>
+                                {% for status_key, status_value in status_choices.items %}
+                                    <option value="{{ status_key }}"{% if selected_status == status_key %} selected{% endif %}>{{ status_value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <div class="input-group">
+                            <label class="input-group-text" for="prioritySelect">Priority</label>
+                            <select class="form-select" id="prioritySelect" name="priority">
+                                <option value="">All Priorities</option>
+                                {% for priority_key, priority_value in priority_choices.items %}
+                                    <option value="{{ priority_key }}"{% if selected_priority == priority_key %} selected{% endif %}>{{ priority_value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <div class="input-group">
+                            <label class="input-group-text" for="gardenBedSelect">Garden Bed</label>
+                            <select class="form-select" id="gardenBedSelect" name="garden_bed">
+                                <option value="">All Garden Beds</option>
+                                {% for bed in garden_beds %}
+                                    <option value="{{ bed.id }}"{% if selected_garden_bed == bed.id|stringformat:"i" %} selected{% endif %}>{{ bed.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-12 text-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                        <a href="{% url 'schedule:todo_task_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i> Clear Filters
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Title</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Due Date</th>
+                    <th>Garden Bed</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in todo_tasks %}
+                <tr>
+                    <td>
+                        <a href="{% url 'schedule:todo_task_detail' task.id %}">
+                            <strong>{{ task.title }}</strong>
+                        </a>
+                        {% if task.description %}
+                        <br>
+                        <small class="text-muted">{{ task.description|truncatechars:100 }}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if task.priority == 'HIGH' %}
+                            <span class="badge bg-danger">{{ task.get_priority_display }}</span>
+                        {% elif task.priority == 'MEDIUM' %}
+                            <span class="badge bg-warning text-dark">{{ task.get_priority_display }}</span>
+                        {% else %}
+                            <span class="badge bg-info text-dark">{{ task.get_priority_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if task.status == 'COMPLETED' %}
+                            <span class="badge bg-success">{{ task.get_status_display }}</span>
+                        {% elif task.status == 'IN_PROGRESS' %}
+                            <span class="badge bg-primary">{{ task.get_status_display }}</span>
+                        {% elif task.status == 'CANCELLED' %}
+                            <span class="badge bg-secondary">{{ task.get_status_display }}</span>
+                        {% else %}
+                            <span class="badge bg-light text-dark">{{ task.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if task.due_date %}
+                            {{ task.due_date }}
+                            {% if task.due_date < today %}
+                                <span class="badge bg-danger">Overdue</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="text-muted">No due date</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if task.garden_bed %}
+                            {{ task.garden_bed.name }}
+                        {% else %}
+                            <span class="text-muted">None</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group">
+                            <a href="{% url 'schedule:todo_task_update' task.id %}" 
+                               class="btn btn-sm btn-outline-primary" 
+                               title="Edit task">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" 
+                                    class="btn btn-sm btn-outline-danger" 
+                                    onclick="confirmDelete('{{ task.id }}', '{{ task.title }}')" 
+                                    title="Delete task">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-4">
+                        <div class="alert alert-info mb-0">
+                            No tasks found. Click "New Task" to create one!
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete the task "<span id="taskName"></span>"?
+                This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete(taskId, taskName) {
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    document.getElementById('taskName').textContent = taskName;
+    document.getElementById('deleteForm').action = "{% url 'schedule:todo_task_delete' 0 %}".replace('0', taskId);
+    modal.show();
+}
+</script>
+{% endblock %}

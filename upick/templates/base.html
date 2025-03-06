@@ -113,6 +113,8 @@
                             <i class="fas fa-sticky-note me-1"></i>Notebook
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="notesDropdown">
+                            <li><a class="dropdown-item" href="{% url 'schedule:todo_list_list' %}"><i class="fas fa-list me-2"></i>Todo Lists</a></li>
+                            <li><a class="dropdown-item" href="{% url 'schedule:todo_task_list' %}"><i class="fas fa-tasks me-2"></i>Todo Tasks</a></li>
                             <li><a class="dropdown-item" href="{% url 'reminders:reminder_list' %}"><i class="fas fa-bell me-2"></i>Reminders</a></li>
                             <li><a class="dropdown-item" href="{% url 'log:log_list' %}"><i class="fas fa-bug me-2"></i>Garden Note Log</a></li>
                         </ul>

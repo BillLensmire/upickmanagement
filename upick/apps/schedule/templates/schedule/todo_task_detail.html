@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block title %}Task: {{ todo_task.title }} - You Pick Manager{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Task Details</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="btn-group">
+                <a href="{% url 'schedule:todo_task_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-list"></i> Back to List
+                </a>
+                {% if todo_task.status != 'COMPLETED' %}
+                    <a href="{% url 'schedule:todo_task_mark_complete' todo_task.id %}" class="btn btn-success">
+                        <i class="fas fa-check"></i> Mark Complete
+                    </a>
+                {% endif %}
+                <a href="{% url 'schedule:todo_task_update' todo_task.id %}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Edit Task
+                </a>
+                <button type="button" class="btn btn-danger" onclick="confirmDelete('{{ todo_task.id }}', '{{ todo_task.title }}')">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Task Information</h5>
+                </div>
+                <div class="card-body">
+                    <h3 class="mb-3">{{ todo_task.title }}</h3>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Status:</strong>
+                            {% if todo_task.status == 'COMPLETED' %}
+                                <span class="badge bg-success">{{ todo_task.get_status_display }}</span>
+                            {% elif todo_task.status == 'IN_PROGRESS' %}
+                                <span class="badge bg-primary">{{ todo_task.get_status_display }}</span>
+                            {% elif todo_task.status == 'CANCELLED' %}
+                                <span class="badge bg-secondary">{{ todo_task.get_status_display }}</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark">{{ todo_task.get_status_display }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Priority:</strong>
+                            {% if todo_task.priority == 'HIGH' %}
+                                <span class="badge bg-danger">{{ todo_task.get_priority_display }}</span>
+                            {% elif todo_task.priority == 'MEDIUM' %}
+                                <span class="badge bg-warning text-dark">{{ todo_task.get_priority_display }}</span>
+                            {% else %}
+                                <span class="badge bg-info text-dark">{{ todo_task.get_priority_display }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Due Date:</strong>
+                            {% if todo_task.due_date %}
+                                {{ todo_task.due_date }}
+                            {% else %}
+                                <span class="text-muted">Not set</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Description:</strong>
+                        <p class="mt-2">{{ todo_task.description|linebreaks|default:"No description provided." }}</p>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Garden Bed:</strong>
+                            {% if todo_task.garden_bed %}
+                                <a href="{% url 'schedule:garden_bed_detail' todo_task.garden_bed.id %}">
+                                    {{ todo_task.garden_bed.name }}
+                                </a>
+                            {% else %}
+                                <span class="text-muted">None</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Planting Schedule:</strong>
+                            {% if todo_task.planting_schedule %}
+                                <a href="{% url 'schedule:schedule_detail' todo_task.planting_schedule.id %}">
+                                    {{ todo_task.planting_schedule.variety.variety_name }} in {{ todo_task.planting_schedule.garden_bed.name }}
+                                </a>
+                            {% else %}
+                                <span class="text-muted">None</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Created:</strong> {{ todo_task.created_at|date:"F j, Y, g:i a" }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Last Updated:</strong> {{ todo_task.updated_at|date:"F j, Y, g:i a" }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Todo Lists</h5>
+                </div>
+                <div class="card-body">
+                    {% if todo_lists %}
+                        <ul class="list-group">
+                            {% for todo_list in todo_lists %}
+                                <li class="list-group-item">
+                                    <a href="{% url 'schedule:todo_list_detail' todo_list.id %}">
+                                        {{ todo_list.title }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">This task is not part of any todo list.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete the task "<span id="taskName"></span>"?
+                This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete(taskId, taskName) {
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    document.getElementById('taskName').textContent = taskName;
+    document.getElementById('deleteForm').action = "{% url 'schedule:todo_task_delete' 0 %}".replace('0', taskId);
+    modal.show();
+}
+</script>
+{% endblock %}

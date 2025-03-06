@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import Group
+from django.utils import timezone
 from apps.plants.models import Plant, Variety
 from apps.planning.models import GardenPlan, SeedInventory
 from datetime import timedelta
@@ -149,3 +150,78 @@ class PlantingSchedule(models.Model):
                 'outside_planting_date': outside_date,
                 'harvest_date': target_harvest_date
             }
+
+
+class TodoTask(models.Model):
+    """Model representing a single task to be completed"""
+    PRIORITY_CHOICES = [
+        ('LOW', 'Low'),
+        ('MEDIUM', 'Medium'),
+        ('HIGH', 'High'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('TODO', 'To Do'),
+        ('IN_PROGRESS', 'In Progress'),
+        ('COMPLETED', 'Completed'),
+        ('CANCELLED', 'Cancelled'),
+    ]
+    
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    due_date = models.DateField(null=True, blank=True)
+    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='MEDIUM')
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='TODO')
+    garden_bed = models.ForeignKey(GardenBed, on_delete=models.SET_NULL, null=True, blank=True, 
+                                  related_name='todo_tasks')
+    planting_schedule = models.ForeignKey(PlantingSchedule, on_delete=models.SET_NULL, null=True, blank=True, 
+                                         related_name='todo_tasks')
+    group = models.ForeignKey(
+        Group,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        help_text='The group this task belongs to'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return self.title
+    
+    class Meta:
+        verbose_name = "Todo Task"
+        verbose_name_plural = "Todo Tasks"
+        ordering = ['due_date', 'priority']
+
+
+class TodoList(models.Model):
+    """Model representing a collection of related tasks"""
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    tasks = models.ManyToManyField(TodoTask, related_name='todo_lists', blank=True)
+    group = models.ForeignKey(
+        Group,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        help_text='The group this list belongs to'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return self.title
+    
+    def get_completion_percentage(self):
+        """Calculate the percentage of completed tasks in this list"""
+        total_tasks = self.tasks.count()
+        if total_tasks == 0:
+            return 0
+        completed_tasks = self.tasks.filter(status='COMPLETED').count()
+        return int((completed_tasks / total_tasks) * 100)
+    
+    class Meta:
+        verbose_name = "Todo List"
+        verbose_name_plural = "Todo Lists"
+        ordering = ['title']

@@ -16,7 +16,8 @@ from django.contrib import messages
 from datetime import datetime, timedelta
 from django.db.models import Q
 from django.contrib.auth.models import Group
-from .models import PlantingSchedule, GardenBed
+from .models import PlantingSchedule, GardenBed, TodoTask, TodoList
+from .forms import TodoTaskForm, TodoListForm
 from apps.plants.models import Plant, Variety
 from apps.planning.models import GardenPlan
 
@@ -633,7 +634,308 @@ def get_calendar_events(request):
     return JsonResponse(events, safe=False)
 
 
+# TodoTask Views
+class TodoTaskListView(LoginRequiredMixin, ListView):
+    model = TodoTask
+    template_name = 'schedule/todo_task_list.html'
+    context_object_name = 'todo_tasks'
+    
+    def get_queryset(self):
+        queryset = TodoTask.objects.filter(group__in=self.request.user.groups.all())
+        
+        # Filter by status if provided
+        status = self.request.GET.get('status')
+        if status:
+            queryset = queryset.filter(status=status)
+        
+        # Filter by priority if provided
+        priority = self.request.GET.get('priority')
+        if priority:
+            queryset = queryset.filter(priority=priority)
+        
+        # Filter by garden bed if provided
+        garden_bed_id = self.request.GET.get('garden_bed')
+        if garden_bed_id:
+            try:
+                garden_bed_id = int(garden_bed_id)
+                queryset = queryset.filter(garden_bed_id=garden_bed_id)
+            except (TypeError, ValueError):
+                pass
+        
+        return queryset.order_by('due_date', 'priority')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'page_app': 'schedule',
+            'page_name': 'todo_task',
+            'page_action': 'list',
+            'status_choices': dict(TodoTask.STATUS_CHOICES),
+            'priority_choices': dict(TodoTask.PRIORITY_CHOICES),
+            'garden_beds': GardenBed.objects.filter(group__in=self.request.user.groups.all()),
+            'selected_status': self.request.GET.get('status'),
+            'selected_priority': self.request.GET.get('priority'),
+            'selected_garden_bed': self.request.GET.get('garden_bed'),
+        })
+        return context
+
+
+class TodoTaskCreateView(LoginRequiredMixin, CreateView):
+    model = TodoTask
+    form_class = TodoTaskForm
+    template_name = 'schedule/todo_task_form.html'
+    
+    def get_success_url(self):
+        return reverse_lazy('schedule:todo_task_list')
+    
+    def form_valid(self, form):
+        instance = form.save(commit=False)
+        group = get_user_group(self.request)
+        if not group:
+            form.add_error(None, 'You must be a member of at least one group to create a task.')
+            return self.form_invalid(form)
+        instance.group = group
+        instance.save()
+        messages.success(self.request, 'Task created successfully.')
+        return super().form_valid(form)
+    
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Filter garden beds and planting schedules by user's groups
+        form.fields['garden_bed'].queryset = GardenBed.objects.filter(
+            group__in=self.request.user.groups.all()
+        )
+        form.fields['planting_schedule'].queryset = PlantingSchedule.objects.filter(
+            group__in=self.request.user.groups.all()
+        )
+        form.fields['group'].queryset = self.request.user.groups.all()
+        return form
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'page_app': 'schedule',
+            'page_name': 'todo_task',
+            'page_action': 'form',
+        })
+        return context
+
+
+class TodoTaskUpdateView(LoginRequiredMixin, UpdateView):
+    model = TodoTask
+    form_class = TodoTaskForm
+    template_name = 'schedule/todo_task_form.html'
+    context_object_name = 'todo_task'
+    
+    def get_success_url(self):
+        return reverse_lazy('schedule:todo_task_list')
+    
+    def get_queryset(self):
+        return TodoTask.objects.filter(group__in=self.request.user.groups.all())
+    
+    def form_valid(self, form):
+        instance = form.save(commit=False)
+        group = get_user_group(self.request)
+        if not group:
+            form.add_error(None, 'You must be a member of at least one group to update a task.')
+            return self.form_invalid(form)
+        instance.group = group
+        instance.save()
+        messages.success(self.request, 'Task updated successfully.')
+        return super().form_valid(form)
+    
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Filter garden beds and planting schedules by user's groups
+        form.fields['garden_bed'].queryset = GardenBed.objects.filter(
+            group__in=self.request.user.groups.all()
+        )
+        form.fields['planting_schedule'].queryset = PlantingSchedule.objects.filter(
+            group__in=self.request.user.groups.all()
+        )
+        form.fields['group'].queryset = self.request.user.groups.all()
+        return form
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'page_app': 'schedule',
+            'page_name': 'todo_task',
+            'page_action': 'form',
+        })
+        return context
+
 @login_required
+def TodoTaskMarkComplete(request, pk):
+    todo_task = get_object_or_404(TodoTask, pk=pk)
+    todo_task.status = 'COMPLETED'
+    todo_task.save()
+    messages.success(request, 'Task marked as complete.')
+    return redirect('schedule:todo_task_list')
+
+class TodoTaskDetailView(LoginRequiredMixin, DetailView):
+    model = TodoTask
+    template_name = 'schedule/todo_task_detail.html'
+    context_object_name = 'todo_task'
+    
+    def get_queryset(self):
+        return TodoTask.objects.filter(group__in=self.request.user.groups.all())
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'page_app': 'schedule',
+            'page_name': 'todo_task',
+            'page_action': 'detail',
+            'todo_lists': self.get_object().todo_lists.all(),
+        })
+        return context
+
+
+class TodoTaskDeleteView(LoginRequiredMixin, DeleteView):
+    model = TodoTask
+    template_name = 'schedule/todo_task_confirm_delete.html'
+    context_object_name = 'todo_task'
+    
+    def get_success_url(self):
+        return reverse_lazy('schedule:todo_task_list')
+    
+    def get_queryset(self):
+        return TodoTask.objects.filter(group__in=self.request.user.groups.all())
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(self.request, 'Task deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
+# TodoList Views
+class TodoListListView(LoginRequiredMixin, ListView):
+    model = TodoList
+    template_name = 'schedule/todo_list_list.html'
+    context_object_name = 'todo_lists'
+    
+    def get_queryset(self):
+        return TodoList.objects.filter(group__in=self.request.user.groups.all())
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'page_app': 'schedule',
+            'page_name': 'todo_list',
+            'page_action': 'list',
+        })
+        return context
+
+
+class TodoListCreateView(LoginRequiredMixin, CreateView):
+    model = TodoList
+    form_class = TodoListForm
+    template_name = 'schedule/todo_list_form.html'
+    
+    def get_success_url(self):
+        return reverse_lazy('schedule:todo_list_list')
+    
+    def form_valid(self, form):
+        instance = form.save(commit=False)
+        group = get_user_group(self.request)
+        if not group:
+            form.add_error(None, 'You must be a member of at least one group to create a list.')
+            return self.form_invalid(form)
+        instance.group = group
+        instance.save()
+        messages.success(self.request, 'Todo list created successfully.')
+        return super().form_valid(form)
+    
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Filter tasks by user's groups
+        form.fields['tasks'].queryset = TodoTask.objects.filter(
+            group__in=self.request.user.groups.all()
+        )
+        return form
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'page_app': 'schedule',
+            'page_name': 'todo_list',
+            'page_action': 'form',
+        })
+        return context
+
+
+class TodoListUpdateView(LoginRequiredMixin, UpdateView):
+    model = TodoList
+    form_class = TodoListForm
+    template_name = 'schedule/todo_list_form.html'
+    context_object_name = 'todo_list'
+    
+    def get_success_url(self):
+        return reverse_lazy('schedule:todo_list_list')
+    
+    def get_queryset(self):
+        return TodoList.objects.filter(group__in=self.request.user.groups.all())
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Todo list updated successfully.')
+        return super().form_valid(form)
+    
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Filter tasks by user's groups
+        form.fields['tasks'].queryset = TodoTask.objects.filter(
+            group__in=self.request.user.groups.all()
+        )
+        form.fields['group'].queryset = self.request.user.groups.all()
+        return form
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'page_app': 'schedule',
+            'page_name': 'todo_list',
+            'page_action': 'form',
+        })
+        return context
+
+
+class TodoListDetailView(LoginRequiredMixin, DetailView):
+    model = TodoList
+    template_name = 'schedule/todo_list_detail.html'
+    context_object_name = 'todo_list'
+    
+    def get_queryset(self):
+        return TodoList.objects.filter(group__in=self.request.user.groups.all())
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        todo_list = self.get_object()
+        context.update({
+            'page_app': 'schedule',
+            'page_name': 'todo_list',
+            'page_action': 'detail',
+            'tasks': todo_list.tasks.all().order_by('due_date', 'priority'),
+            'completion_percentage': todo_list.get_completion_percentage(),
+        })
+        return context
+
+
+class TodoListDeleteView(LoginRequiredMixin, DeleteView):
+    model = TodoList
+    template_name = 'schedule/todo_list_confirm_delete.html'
+    context_object_name = 'todo_list'
+    
+    def get_success_url(self):
+        return reverse_lazy('schedule:todo_list_list')
+    
+    def get_queryset(self):
+        return TodoList.objects.filter(group__in=self.request.user.groups.all())
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(self.request, 'Todo list deleted successfully.')
+        return super().delete(request, *args, **kwargs)
+
+
 def export_calendar_pdf(request):
     """Export the planting schedule as a PDF calendar."""
     # Get the month and year from the request, default to current month

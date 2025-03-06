@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Todo Lists - You Pick Manager{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Todo Lists</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'schedule:todo_list_create' %}" class="btn btn-success">
+                <i class="fas fa-plus"></i> New List
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for todo_list in todo_lists %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <a href="{% url 'schedule:todo_list_detail' todo_list.id %}">
+                            {{ todo_list.title }}
+                        </a>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if todo_list.description %}
+                    <p class="card-text">{{ todo_list.description|truncatechars:100 }}</p>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <strong>Tasks:</strong> {{ todo_list.tasks.count }}
+                    </div>
+                    
+                    <div class="progress mb-3">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {{ todo_list.get_completion_percentage }}%;" 
+                             aria-valuenow="{{ todo_list.get_completion_percentage }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                            {{ todo_list.get_completion_percentage }}%
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <small class="text-muted">Created: {{ todo_list.created_at|date:"M d, Y" }}</small>
+                        <small class="text-muted">Updated: {{ todo_list.updated_at|date:"M d, Y" }}</small>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="btn-group w-100">
+                        <a href="{% url 'schedule:todo_list_detail' todo_list.id %}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                        <a href="{% url 'schedule:todo_list_update' todo_list.id %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                onclick="confirmDelete('{{ todo_list.id }}', '{{ todo_list.title }}')">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                No todo lists found. Click "New List" to create one!
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete the todo list "<span id="listName"></span>"?
+                This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete(listId, listName) {
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    document.getElementById('listName').textContent = listName;
+    document.getElementById('deleteForm').action = "{% url 'schedule:todo_list_delete' 0 %}".replace('0', listId);
+    modal.show();
+}
+</script>
+{% endblock %}
