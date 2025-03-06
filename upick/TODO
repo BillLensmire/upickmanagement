@@ -1,2 +1,3 @@
-Add Task List Django App that shows up on the calendar view
+
 Add message notification via telegram bot
+Fix TODO link on calendar

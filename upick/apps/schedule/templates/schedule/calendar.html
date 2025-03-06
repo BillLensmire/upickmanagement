@@ -7,7 +7,7 @@
 <div class="container">
     <div class="row mb-4">
         <div class="col-md-8">
-            <h1>Planting Calendar</h1>
+            <h1>Planting & Task Calendar</h1>
         </div>
         <div class="col-md-4 text-end">
             <button id="exportBtn" class="btn btn-outline-primary">
@@ -41,6 +41,21 @@
                             <input class="form-check-input filter-status" type="checkbox" value="HARVESTED" id="statusHarvested" checked>
                             <label class="form-check-label" for="statusHarvested">
                                 Harvested
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">ToDo Tasks</label>
+                        <div class="form-check">
+                            <input class="form-check-input todo-status" type="checkbox" value="TODO" id="todoPlanned" checked>
+                            <label class="form-check-label" for="todoPlanned">
+                                TODO Planned
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input todo-status" type="checkbox" value="IN_PROGRESS" id="todoInProgress" checked>
+                            <label class="form-check-label" for="todoInProgress">
+                                TODO In Progress
                             </label>
                         </div>
                     </div>
@@ -146,9 +161,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const selectedStatus = Array.from(document.querySelectorAll('.filter-status:checked')).map(cb => cb.value);
             const selectedBeds = Array.from(document.querySelectorAll('.filter-bed:checked')).map(cb => cb.value);
             const selectedTypes = Array.from(document.querySelectorAll('.filter-type:checked')).map(cb => cb.value);
+            const selectedTodoStatus = Array.from(document.querySelectorAll('.todo-status:checked')).map(cb => cb.value);
 
             // Fetch events from our API
-            fetch(`/schedule/api/events/?start=${info.startStr}&end=${info.endStr}&status=${selectedStatus.join(',')}&beds=${selectedBeds.join(',')}&types=${selectedTypes.join(',')}`)
+            fetch(`/schedule/api/events/?start=${info.startStr}&end=${info.endStr}&status=${selectedStatus.join(',')}&beds=${selectedBeds.join(',')}&types=${selectedTypes.join(',')}&todo_status=${selectedTodoStatus.join(',')}`)
                 .then(response => response.json())
                 .then(data => {
                     successCallback(data);
@@ -159,7 +175,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
         },
         eventClick: function(info) {
-            window.location.href = `/schedule/${info.event.id}/`;
+            if (info.event.className === 'todo') {
+                window.location.href = `/schedule/todo_task_detail/${info.event.id}/`;
+            } else {
+                window.location.href = `/schedule/${info.event.id}/`;
+            }
         },
         eventContent: function(arg) {
             return {
@@ -175,7 +195,7 @@ document.addEventListener('DOMContentLoaded', function() {
     calendar.render();
 
     // Add event listeners for filters
-    document.querySelectorAll('.filter-status, .filter-bed, .filter-type').forEach(checkbox => {
+    document.querySelectorAll('.filter-status, .filter-bed, .filter-type, .todo-status').forEach(checkbox => {
         checkbox.addEventListener('change', function() {
             calendar.refetchEvents();
         });
@@ -198,6 +218,11 @@ document.addEventListener('DOMContentLoaded', function() {
     background-color: #ffc107;
     border-color: #ffc107;
     color: #000;
+}
+.fc-event.todo {
+    background-color: #000;
+    border-color: #000;
+    color: #fff;
 }
 </style>
 {% endblock %}

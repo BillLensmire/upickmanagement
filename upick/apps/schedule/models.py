@@ -166,7 +166,7 @@ class TodoTask(models.Model):
         ('COMPLETED', 'Completed'),
         ('CANCELLED', 'Cancelled'),
     ]
-    
+     
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     due_date = models.DateField(null=True, blank=True)

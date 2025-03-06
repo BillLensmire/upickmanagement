@@ -583,6 +583,7 @@ def get_calendar_events(request):
     status_filter = request.GET.get('status', '').split(',')
     beds_filter = request.GET.get('beds', '').split(',')
     types_filter = request.GET.get('types', '').split(',')
+    todo_status_filter = request.GET.get('todo_status', '').split(',')
     
     try:
         # Handle ISO format dates from FullCalendar (e.g. 2025-01-26T00:00:00-06:00)
@@ -592,12 +593,15 @@ def get_calendar_events(request):
         return JsonResponse({'error': f'Invalid date format. Got start={start}, end={end}'}, status=400)
     
     schedules = PlantingSchedule.objects.filter(garden_bed__group__in=request.user.groups.all())
+    todo_tasks = TodoTask.objects.filter(group__in=request.user.groups.all())
     
     # Apply filters
     if status_filter and status_filter[0]:
         schedules = schedules.filter(status__in=status_filter)
     if beds_filter and beds_filter[0]:
         schedules = schedules.filter(garden_bed_id__in=beds_filter)
+    if todo_status_filter and todo_status_filter[0]:
+        todo_tasks = todo_tasks.filter(status__in=todo_status_filter)
     
     events = []
     for schedule in schedules:
@@ -630,6 +634,16 @@ def get_calendar_events(request):
                     'description': f'Garden Bed: {schedule.garden_bed.name}',
                     'className': 'harvest',
                 })
+    
+    for todo_task in todo_tasks:
+        if start_date <= todo_task.due_date <= end_date:
+            events.append({
+                'id': todo_task.id,
+                'title': todo_task.title,
+                'start': todo_task.due_date.isoformat(),
+                'description': f'TODO: {todo_task.title}',
+                'className': 'todo',
+            })
     
     return JsonResponse(events, safe=False)
 
@@ -1022,6 +1036,20 @@ def export_calendar_pdf(request):
                 f'🌾 (Harvest)  - Qty: {schedule.quantity} :: {schedule.variety.variety_plant.name} - {schedule.variety.variety_name} :: {schedule.garden_bed.name}'
             )
     
+    todo_tasks = TodoTask.objects.filter(
+        group__in=request.user.groups.all()
+    ).filter(
+        Q(due_date__range=(start_date, end_date))
+    )
+    
+    # Group todo tasks by date
+    todo_tasks_by_date = defaultdict(list)
+    for todo_task in todo_tasks:
+        if todo_task.due_date and start_date <= todo_task.due_date < end_date:
+            todo_tasks_by_date[todo_task.due_date].append(
+                f'TODO: {todo_task.title}'
+            )
+    
     # Create styles for the list format
     date_style = ParagraphStyle(
         'DateStyle',
@@ -1065,6 +1093,15 @@ def export_calendar_pdf(request):
         # Add each event under the date
         for event in events_by_date[date]:
             elements.append(Paragraph(event, event_style))
+
+    for date in sorted(todo_tasks_by_date.keys()):
+        # Add the date header
+        date_str = date.strftime('%A, %B %d, %Y')
+        elements.append(Paragraph(date_str, date_style))
+        
+        # Add each todo task under the date
+        for todo_task in todo_tasks_by_date[date]:
+            elements.append(Paragraph(todo_task, event_style))
     
     # If no events, add a message
     if not events_by_date:
