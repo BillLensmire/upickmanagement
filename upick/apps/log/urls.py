@@ -8,4 +8,5 @@ urlpatterns = [
     path('create/', views.log_create, name='log_create'),
     path('<int:pk>/', views.log_detail, name='log_detail'),
     path('<int:pk>/edit/', views.log_edit, name='log_edit'),
+    path('<int:pk>/delete/', views.LogDeleteView.as_view(), name='log_delete'),
 ]

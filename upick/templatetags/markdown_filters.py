@@ -57,3 +57,31 @@ def markdown_with_latex(value):
         html_content = html_content.replace(placeholder, latex)
     
     return mark_safe(html_content)
+
+
+@register.filter(name='markdown_only')
+def markdown_only(value):
+    """
+    Convert markdown text to HTML.
+    
+    This filter processes markdown content.
+    """
+    if not value:
+        return ""
+    
+    # Process markdown content
+    html_content = markdown.markdown(
+        value,
+        extensions=[
+            'tables',                # Support for tables
+            'fenced_code',           # Support for ```code blocks
+            'codehilite',            # Syntax highlighting
+            'nl2br',                 # Convert newlines to <br>
+            'sane_lists',            # Better list handling
+            'def_list',              # Definition lists
+            'attr_list',             # HTML attributes
+            'smarty'                 # Smart quotes, dashes, etc.
+        ]
+    )
+        
+    return mark_safe(html_content)

@@ -87,8 +87,16 @@
 
             <!-- Main Content -->
             <div class="description-content mb-4">
-                <h5>Notes (supports markdown)</h5>
-                {{ log_entry.description|markdown_with_latex }}
+                <h5>Notes (supports markdown)
+                    {% if log_entry.description_includes_latex %}
+                    <span class="text-muted">(includes LaTeX)</span>
+                    {% endif %}
+                </h5>
+                {% if log_entry.description_includes_latex %}
+                    {{ log_entry.description|markdown_with_latex }}
+                {% else %}
+                    {{ log_entry.description|markdown_only }}
+                {% endif %}
             </div>
 
             <!-- Media Section -->

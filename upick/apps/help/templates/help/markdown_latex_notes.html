@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static %}
+{% load page_tags %}
+{% with page_app='help' page_name='markdown_latex_notes' page_action='list' %}
+
+{% block title %}Markdown and LaTeX Notes{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h2>Markdown and LaTeX Notes</h2>
+                </div>
+                <div class="card-body">
+                    <h3>About LaTeX Notes</h3>
+                    <p>
+                        LaTeX syntax is different from Markdown. The issue that LaTeX uses the <code>$</code> symbol for math equations, which can conflict with Markdown formatting.  If you want to mention dollar amounts in your notes, for example 'the seed cost $5.60', leave the checkbox for LaTeX unchecked.
+                    </p>
+                    <p>
+                        If you are just entering a simple note without any math equations, you can leave the checkbox for LaTeX unchecked.
+                    </p>
+                    <p>
+                        If you need to enter equations, then put that into a separate note and check the LaTeX checkbox.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% endwith %}

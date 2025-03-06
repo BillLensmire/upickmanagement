@@ -12,6 +12,9 @@ from apps.planning.models import GardenPlan, SeedSource
 from apps.foliarrecipes.models import FoliarRecipe
 from apps.schedule.models import GardenBed
 from datetime import date
+from django.urls import reverse_lazy
+from django.views.generic.edit import DeleteView
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 def get_user_group(request):
     """Get the user's active group or return None if user has no groups.
@@ -27,7 +30,7 @@ def log_list(request):
     entry_type = request.GET.get('type', '')
     search_query = request.GET.get('search', '')
     
-    logs = LogEntry.objects.all().order_by('-created_at')
+    logs = LogEntry.objects.all().order_by('-updated_at')
     
     if entry_type:
         logs = logs.filter(entry_type=entry_type)
@@ -69,7 +72,8 @@ def log_create(request):
         
         group = get_user_group(request)
         if not group:
-            group = Group.objects.get(name='Default')
+            messages.error(request, 'You must be a member of at least one group to perform this action. Please contact your administrator.')
+            return redirect('log:log_list')
 
         if title and entry_type:
             # Create log entry
@@ -136,6 +140,11 @@ def log_create(request):
                 except GardenPlan.DoesNotExist:
                     log_entry.garden_plan = None
             
+            if request.POST.get('description_includes_latex') == 'on':
+                log_entry.description_includes_latex = True
+            else:
+                log_entry.description_includes_latex = False
+
             # Save the files
             log_entry.save()
             
@@ -189,7 +198,11 @@ def log_edit(request, pk):
         log_entry.entry_type = entry_type
         log_entry.title = title
         log_entry.description = description
-        log_entry.logdate = logdate
+        log_entry.logdate = logdate 
+        if request.POST.get('description_includes_latex') == 'on':
+            log_entry.description_includes_latex = True
+        else:
+            log_entry.description_includes_latex = False
         
         # Handle file uploads
         if 'photo' in request.FILES:
@@ -211,7 +224,9 @@ def log_edit(request, pk):
                 log_entry.group = Group.objects.get(id=group_id)
             except Group.DoesNotExist:
                 pass
-        
+        else:
+            log_entry.group = get_user_group(request)
+
         # Handle related fields
         plant_ids = request.POST.getlist('plants')
         if plant_ids:
@@ -282,3 +297,14 @@ def log_edit(request, pk):
         'groups': Group.objects.all(),
     }
     return render(request, 'log/log_form.html', context)
+
+class LogDeleteView(LoginRequiredMixin, DeleteView):
+    model = LogEntry
+    success_url = reverse_lazy('log:log_list')
+
+    def get_queryset(self):
+        return LogEntry.objects.filter(group__in=self.request.user.groups.all())
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Log entry deleted successfully.')
+        return super().delete(request, *args, **kwargs)

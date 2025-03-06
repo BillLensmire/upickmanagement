@@ -8,6 +8,7 @@ from django.contrib.auth.models import Group
 from datetime import datetime
 from .models import  GardenPlan
 from .forms import GardenPlanForm
+from apps.schedule.models import GardenBed, PlantingSchedule
 
 def get_user_group(request):
     """Get the user's active group or return None if user has no groups.
@@ -106,7 +107,6 @@ class GardenPlanDetailView(LoginRequiredMixin, DetailView):
         context['page_action'] = 'detail'
         # Handle the case where produce_plan_overview might not exist
         context['produce_plan'] = getattr(garden_plan, 'produce_plan_overview', None)
-        from schedule.models import GardenBed, PlantingSchedule
         context['garden_beds'] = GardenBed.objects.filter(
             group__in=self.request.user.groups.all(),
             year=garden_plan.year

@@ -49,6 +49,12 @@ class LogEntry(models.Model):
         help_text='Main text content of the log entry'
     )
 
+    # LaTeX support
+    description_includes_latex = models.BooleanField(
+        default=False,
+        help_text='Indicates if the description includes LaTeX'
+    )
+
     # Optional file fields
     photo = models.ImageField(
         upload_to='photos/log_photos/', 

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load page_tags %}
-{% with page_app='log' page_name='beneficials' page_action='list' %}
+{% with page_app='log' page_name='log' page_action='list' %}
 
 {% block content %}
 <div class="container py-4">
@@ -52,7 +52,11 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="description" class="form-label">Notes (<a href="{% url 'help:markdown_latex_help' %}" target="_blank" rel="noopener">Supports Markdown</a>)*</label>
+                    <div class="form-group">
+                        <label for="description" class="form-label">Notes (<a href="{% url 'help:markdown_latex_help' %}" target="_blank" rel="noopener">Supports Markdown</a>)*</label>
+                        <input type="checkbox" name="description_includes_latex" {% if log_entry.description_includes_latex %}checked{% endif %}>
+                        <label>Includes LaTeX (<a href="{% url 'help:markdown_latex_notes' %}" target="_blank" rel="noopener">i.e. math equations, etc. from ChatGpt</a>)</label>
+                    </div>
                     <textarea class="form-control" id="description" name="description" 
                               rows="20" required>{{ log_entry.description|default:'' }}</textarea>
                     <div class="invalid-feedback">

@@ -9,6 +9,11 @@ class MarkdownHelpView(TemplateView):
     template_name = 'help/markdown_latex_help.html'
 
 
+class MarkdownHelpNotesView(TemplateView):
+    """View to display help information about Markdown and LaTeX syntax for nutrient notes."""
+    template_name = 'help/markdown_latex_notes.html'
+
+
 class NutrientNotesHelpView(TemplateView):
     """View to display help information about nutrient notes."""
     template_name = 'help/nutrient_notes_help.html'
