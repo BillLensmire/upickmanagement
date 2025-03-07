@@ -183,9 +183,17 @@
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label for="harvest_date" class="form-label">Expected Harvest Date**</label>
-                                    <input type="text" class="form-control datepicker" id="harvest_date" 
-                                           name="harvest_date" value="{% if form.harvest_date.value %}{{ form.harvest_date.value|date:'m/d/Y' }}{% elif schedule.harvest_date %}{{ schedule.harvest_date|date:'m/d/Y' }}{% endif %}" 
-                                           placeholder="MM/DD/YYYY" autocomplete="off">
+                                    <div class="input-group">
+                                        <button type="button" class="btn btn-outline-secondary" id="decrease-harvest-date">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                        <input type="text" class="form-control datepicker" id="harvest_date" 
+                                               name="harvest_date" value="{% if form.harvest_date.value %}{{ form.harvest_date.value|date:'m/d/Y' }}{% elif schedule.harvest_date %}{{ schedule.harvest_date|date:'m/d/Y' }}{% endif %}" 
+                                               placeholder="MM/DD/YYYY" autocomplete="off">
+                                        <button type="button" class="btn btn-outline-secondary" id="increase-harvest-date">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
                                     <div class="form-text">Format: MM/DD/YYYY</div>
                                     <div class="invalid-feedback">Please enter a valid harvest date.</div>
                                 </div>
@@ -429,6 +437,41 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update variety information display
         updateVarietyInfo(this.value);
     });
+    
+    // Handle increment/decrement buttons for harvest date
+    const increaseHarvestDateBtn = document.getElementById('increase-harvest-date');
+    const decreaseHarvestDateBtn = document.getElementById('decrease-harvest-date');
+    
+    // Function to adjust date by specified number of days
+    function adjustDate(dateInput, days) {
+        const dateStr = dateInput.value;
+        if (!dateStr) return;
+        
+        const dateObj = parseDate(dateStr);
+        if (!dateObj) return;
+        
+        dateObj.setDate(dateObj.getDate() + days);
+        dateInput.value = formatDateToMMDDYYYY(dateObj);
+        
+        // Update the datepicker
+        $(dateInput).datepicker('update');
+        
+        // Trigger change event to update dependent dates
+        dateInput.dispatchEvent(new Event('change'));
+    }
+    
+    // Add event listeners for the buttons
+    if (increaseHarvestDateBtn) {
+        increaseHarvestDateBtn.addEventListener('click', function() {
+            adjustDate(harvestDateInput, 1);
+        });
+    }
+    
+    if (decreaseHarvestDateBtn) {
+        decreaseHarvestDateBtn.addEventListener('click', function() {
+            adjustDate(harvestDateInput, -1);
+        });
+    }
     
     // Function to update variety information display
     function updateVarietyInfo(varietyId) {
