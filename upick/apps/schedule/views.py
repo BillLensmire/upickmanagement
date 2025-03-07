@@ -401,7 +401,11 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
         # Get variety data for date calculations
         varieties_data = {}
         for variety in varieties:
-            earlies_outside_planting_date = garden_config.spring_frost_date + timedelta(days=variety.variety_days_from_frost_to_transplant)
+            if variety.variety_days_from_frost_to_transplant is None:
+                earlies_outside_planting_date = garden_config.spring_frost_date
+            else:
+                earlies_outside_planting_date = garden_config.spring_frost_date + timedelta(days=variety.variety_days_from_frost_to_transplant)
+            
             variety_data = {
                 'earliest_outside_planting_date': earlies_outside_planting_date,
                 'spring_frost_date': garden_config.spring_frost_date,
