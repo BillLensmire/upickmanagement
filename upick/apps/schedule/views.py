@@ -383,7 +383,9 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
         # Get variety data for date calculations
         varieties_data = {}
         for variety in varieties:
+            earlies_outside_planting_date = garden_config.spring_frost_date + timedelta(days=variety.variety_days_from_frost_to_transplant)
             variety_data = {
+                'earliest_outside_planting_date': earlies_outside_planting_date,
                 'spring_frost_date': garden_config.spring_frost_date,
                 'fall_frost_date': garden_config.fall_frost_date,
                 'days_to_germinate': variety.variety_plant.days_to_germinate,
@@ -538,7 +540,9 @@ class ScheduleUpdateView(LoginRequiredMixin, UpdateView):
         # Get variety data for date calculations
         varieties_data = {}
         for variety in varieties:
+            earlies_outside_planting_date = garden_config.spring_frost_date + timedelta(days=variety.variety_days_from_frost_to_transplant)
             variety_data = {
+                'earliest_outside_planting_date': earlies_outside_planting_date,
                 'spring_frost_date': garden_config.spring_frost_date,
                 'fall_frost_date': garden_config.fall_frost_date,
                 'days_to_germinate': variety.variety_plant.days_to_germinate if variety.variety_plant.days_to_germinate else 0,
@@ -565,10 +569,10 @@ class ScheduleUpdateView(LoginRequiredMixin, UpdateView):
         varieties_data_json = safe_json_dumps(varieties_data)
         
         # Debug: Print the first few items of the varieties_data dictionary
-        print(f"Varieties data sample: {list(varieties_data.items())[:3]}")
-        print(f"Varieties data keys: {list(varieties_data.keys())[:10]}")  
-        print(f"JSON type: {type(varieties_data_json)}")
-        print(f"JSON sample: {varieties_data_json[:100]}...")
+        #print(f"Varieties data sample: {list(varieties_data.items())[:3]}")
+        #print(f"Varieties data keys: {list(varieties_data.keys())[:10]}")  
+        #print(f"JSON type: {type(varieties_data_json)}")
+        #print(f"JSON sample: {varieties_data_json[:100]}...")
         
         context.update({
             'garden_beds': garden_beds,

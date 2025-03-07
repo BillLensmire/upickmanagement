@@ -66,6 +66,12 @@
                                 {% else %}
                                 <li><strong>Expected Harvest:</strong> Not Set</li>
                                 {% endif %}
+                                <li><strong>Planting Method:</strong> {{ schedule.variety.variety_planting_method }}</li>
+
+                            <h6><br>Spacing</h6>
+                            <li><strong>Between Plants:</strong> {{ schedule.variety.variety_spacing_between_plants }}"</li>
+                            <li><strong>Between Rows:</strong> {{ schedule.variety.variety_spacing_between_rows }}"</li>
+                            <li><strong>Height:</strong> {{ schedule.variety.variety_plant.height_inches }}"</li>
                             </ul>
                         </div>
                     </div>
@@ -85,32 +91,7 @@
                     {% endif %}
                 </div>
             </div>
-
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Plant Details</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <ul class="list-unstyled">
-                                <li><strong>Name:</strong> {{ schedule.variety.variety_plant.name }} - {{ schedule.variety.variety_name }}</li>
-                                <li><strong>Method:</strong> {{ schedule.variety.variety_planting_method }}</li>
-                            </ul>
-                        </div>
-                        <div class="col-md-6">
-                            <h6>Spacing</h6>
-                            <ul class="list-unstyled">
-                                <li><strong>Between Plants:</strong> {{ schedule.variety.variety_spacing_between_plants }}"</li>
-                                <li><strong>Between Rows:</strong> {{ schedule.variety.variety_spacing_between_rows }}"</li>
-                                <li><strong>Height:</strong> {{ schedule.variety.variety_plant.height_inches }}"</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
-
     </div>
 </div>
 {% endblock %}

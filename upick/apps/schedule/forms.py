@@ -55,9 +55,9 @@ class PlantingScheduleForm(forms.ModelForm):
     
     # Add custom date fields to handle mm/dd/yyyy format
     inside_planting_date = forms.DateField(
-        required=True,
+        required=False,  # Default to False, we'll set it dynamically in __init__
         input_formats=['%m/%d/%Y', '%Y-%m-%d'],
-        error_messages={'required': 'Inside planting date is required.'},
+        error_messages={'required': 'Inside planting date is required for transplant varieties.'},
         widget=forms.DateInput(attrs={
             'class': 'form-control datepicker',
             'data-date-format': 'mm/dd/yyyy',
@@ -145,3 +145,24 @@ class PlantingScheduleForm(forms.ModelForm):
 
             # Make variety required
             self.fields['variety'].required = True
+            
+        # Set inside_planting_date required based on variety's planting method
+        # For existing instances with a variety
+        if self.instance and self.instance.pk and self.instance.variety:
+            if self.instance.variety.variety_planting_method == 'TRANSPLANT':
+                self.fields['inside_planting_date'].required = True
+            else:
+                self.fields['inside_planting_date'].required = False
+            
+    def clean(self):
+        cleaned_data = super().clean()
+        
+        # Get the variety from the cleaned data
+        variety = cleaned_data.get('variety')
+        inside_planting_date = cleaned_data.get('inside_planting_date')
+        
+        # Check if inside_planting_date is required based on variety's planting method
+        if variety and variety.variety_planting_method == 'TRANSPLANT' and not inside_planting_date:
+            self.add_error('inside_planting_date', 'Inside planting date is required for transplant varieties.')
+            
+        return cleaned_data

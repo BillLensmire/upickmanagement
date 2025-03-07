@@ -130,31 +130,31 @@
                                     <div id="fall-frost-date">{% if schedule and schedule.variety %}{{ schedule.variety.fall_frost_date|default:"--" }}{% else %}--{% endif %}</div>
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="mb-3 d-flex">
+                                    <label for="earliest_outside_planting_date" class="form-label me-2">Earliest Outside Planting Date:</label>
+                                    <div id="earliest-outside-planting-date">{% if schedule and schedule.variety %}{{ schedule.variety.earliest_outside_planting_date|default:"--" }}{% else %}--{% endif %}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3 d-flex">
+                                    <label for="days_from_frost_to_transplant" class="form-label me-2">Days from Frost to Transplant:</label>
+                                    <div id="days-from-frost-to-transplant">{% if schedule and schedule.variety %}{{ schedule.variety.days_from_frost_to_transplant|default:"--" }}{% else %}--{% endif %}</div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="row" id="variety-info-row">
-                            <div class="col-md-3">
-                                <div class="mb-3">
-                                    <label for="days_to_germinate" class="form-label">Days to Germinate</label>
-                                    <div id="days-to-germinate">{% if schedule and schedule.variety %}{{ schedule.variety.variety_plant.days_to_germinate|default:"--" }}{% else %}--{% endif %}</div>
+                            <div class="col-md-6">
+                                <div class="mb-3 d-flex">
+                                    <label for="days_from_seed_to_transplant" class="form-label me-2">Days from Seed to Transplant:</label>
+                                    <div id="days-from-seed-to-transplant">{% if schedule and schedule.variety %}{{ schedule.variety.days_from_seed_to_transplant|default:"--" }}{% else %}--{% endif %}</div>
                                 </div>
                             </div>
-                            <div class="col-md-3">
-                                <div class="mb-3">
-                                    <label for="days_from_seed_to_transplant" class="form-label">Days Seed to Transplant</label>
-                                    <div id="days-from-seed-to-transplant">{% if schedule and schedule.variety %}{{ schedule.variety.variety_days_from_seed_to_transplant|default:"--" }}{% else %}--{% endif %}</div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="mb-3">
-                                    <label for="days_to_maturity" class="form-label">Days to Maturity</label>
-                                    <div id="days-to-maturity">{% if schedule and schedule.variety %}{{ schedule.variety.variety_days_to_maturity|default:"--" }}{% else %}--{% endif %}</div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="mb-3">
-                                    <label for="days_from_frost_to_transplant" class="form-label">Days Frost to Transplant</label>
-                                    <div id="days-from-frost-to-transplant">{% if schedule and schedule.variety %}{{ schedule.variety.variety_days_from_frost_to_transplant|default:"--" }}{% else %}--{% endif %}</div>
+                            <div class="col-md-6">
+                                <div class="mb-3 d-flex">
+                                    <label for="days_to_maturity" class="form-label me-2">Days to Maturity:</label>
+                                    <div id="days-to-maturity">{% if schedule and schedule.variety %}{{ schedule.variety.days_to_maturity|default:"--" }}{% else %}--{% endif %}</div>
                                 </div>
                             </div>
                         </div>
@@ -182,12 +182,18 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="mb-3">
-                                    <label for="harvest_date" class="form-label">Expected Harvest Date</label>
+                                    <label for="harvest_date" class="form-label">Expected Harvest Date**</label>
                                     <input type="text" class="form-control datepicker" id="harvest_date" 
                                            name="harvest_date" value="{% if form.harvest_date.value %}{{ form.harvest_date.value|date:'m/d/Y' }}{% elif schedule.harvest_date %}{{ schedule.harvest_date|date:'m/d/Y' }}{% endif %}" 
                                            placeholder="MM/DD/YYYY" autocomplete="off">
                                     <div class="form-text">Format: MM/DD/YYYY</div>
                                     <div class="invalid-feedback">Please enter a valid harvest date.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <div class ="form-text">Planting Method: {{ schedule.variety.variety_planting_method }}</div>
+                                    <div class="form-text">** Changing the Expected Harvest Date will adjust the Outside and Inside Planting Dates</div>
                                 </div>
                             </div>
                         </div>
@@ -494,8 +500,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Update the display fields
-        document.getElementById('days-to-germinate').textContent = 
-            (varietyData.days_to_germinate !== undefined) ? varietyData.days_to_germinate : '--';
         document.getElementById('days-to-maturity').textContent = 
             (varietyData.days_to_maturity !== undefined) ? varietyData.days_to_maturity : '--';
         document.getElementById('days-from-seed-to-transplant').textContent = 
@@ -506,6 +510,8 @@ document.addEventListener('DOMContentLoaded', function() {
             (varietyData.spring_frost_date !== undefined) ? varietyData.spring_frost_date : '--';
         document.getElementById('fall-frost-date').textContent = 
             (varietyData.fall_frost_date !== undefined) ? varietyData.fall_frost_date : '--';
+        document.getElementById('earliest-outside-planting-date').textContent = 
+            (varietyData.earliest_outside_planting_date !== undefined) ? varietyData.earliest_outside_planting_date : '--';
     }
     
     // Initialize variety info if a variety is already selected
