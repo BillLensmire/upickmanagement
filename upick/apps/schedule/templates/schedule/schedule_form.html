@@ -19,6 +19,23 @@
                     <h5 class="mb-0">{% if schedule %}Edit{% else %}Create{% endif %} Planting Schedule</h5>
                 </div>
                 <div class="card-body">
+                    {% if form.errors %}
+                    <div class="alert alert-danger" role="alert">
+                        <h5 class="alert-heading">Please correct the following errors:</h5>
+                        <ul class="mb-0">
+                            {% for field, errors in form.errors.items %}
+                                {% if field == '__all__' %}
+                                    {% for error in errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                {% else %}
+                                    <li><strong>{{ field|title }}:</strong> {{ errors|join:', ' }}</li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
                     <form method="post" class="needs-validation" novalidate>
                         {% csrf_token %}
                         {% if selected_year %}
@@ -30,7 +47,7 @@
                             <select name="garden_plan" id="garden_plan" class="form-select" required>
                                 <option value="">Select a Garden Plan</option>
                                 {% for plan in garden_plans %}
-                                <option value="{{ plan.id }}" {% if schedule and schedule.garden_plan.id == plan.id %}selected{% endif %}>
+                                <option value="{{ plan.id }}" {% if form.garden_plan.value == plan.id|stringformat:'i' %}selected{% elif schedule and schedule.garden_plan.id == plan.id %}selected{% endif %}>
                                     {{ plan.name }} ({{ plan.year }})
                                 </option>
                                 {% endfor %}
@@ -43,7 +60,7 @@
                             <select name="garden_bed" id="garden_bed" class="form-select" required>
                                 <option value="">Select a Garden Bed</option>
                                 {% for bed in garden_beds %}
-                                <option value="{{ bed.id }}" {% if schedule and schedule.garden_bed.id == bed.id %}selected{% endif %}>
+                                <option value="{{ bed.id }}" {% if form.garden_bed.value == bed.id|stringformat:'i' %}selected{% elif schedule and schedule.garden_bed.id == bed.id %}selected{% endif %}>
                                     {{ bed.name }} ({{ bed.width_feet }}' x {{ bed.length_feet }}')
                                 </option>
                                 {% endfor %}
@@ -59,7 +76,7 @@
                             <select name="variety" id="variety" class="form-select" required>
                                 <option value="">Select a Variety</option>
                                 {% for variety in varieties %}
-                                <option value="{{ variety.id }}" {% if schedule and schedule.variety.id == variety.id %}selected{% endif %}>
+                                <option value="{{ variety.id }}" {% if form.variety.value == variety.id|stringformat:'i' %}selected{% elif schedule and schedule.variety.id == variety.id %}selected{% endif %}>
                                     {% if variety.variety_plant %}{{ variety.variety_plant.name }} - {% endif %}{{ variety.variety_name }}
                                 </option>
                                 {% endfor %}
@@ -72,7 +89,7 @@
                                 <div class="mb-3">
                                     <label for="quantity" class="form-label">Quantity</label>
                                     <input type="number" class="form-control" id="quantity" name="quantity" 
-                                           value="{{ schedule.quantity|default:'1' }}" min="1" required>
+                                           value="{% if form.quantity.value %}{{ form.quantity.value }}{% elif schedule %}{{ schedule.quantity }}{% else %}1{% endif %}" min="1" required>
                                     <div class="invalid-feedback">Please enter a valid quantity.</div>
                                 </div>
                             </div>
@@ -80,7 +97,7 @@
                                 <div class="mb-3">
                                     <label for="rows" class="form-label">Number of Rows</label>
                                     <input type="number" class="form-control" id="rows" name="rows" 
-                                           value="{{ schedule.rows|default:'1' }}" min="1"
+                                           value="{% if form.rows.value %}{{ form.rows.value }}{% elif schedule %}{{ schedule.rows }}{% else %}1{% endif %}" min="1"
                                            required>
                                     <div class="invalid-feedback">Please enter a valid number of rows.</div>
                                 </div>
@@ -92,7 +109,7 @@
                             <label for="status" class="form-label">Status</label>
                             <select name="status" id="status" class="form-select" required>
                                 {% for status_code, status_label in status_choices %}
-                                <option value="{{ status_code }}" {% if status_code == schedule.status %}selected{% endif %}>
+                                <option value="{{ status_code }}" {% if form.status.value == status_code %}selected{% elif status_code == schedule.status %}selected{% endif %}>
                                     {{ status_label }}
                                 </option>
                                 {% endfor %}
@@ -105,7 +122,7 @@
                                 <div class="mb-3">
                                     <label for="inside_planting_date" class="form-label">Inside Planting Date</label>
                                     <input type="text" class="form-control datepicker" id="inside_planting_date" 
-                                           name="inside_planting_date" value="{% if schedule.inside_planting_date %}{{ schedule.inside_planting_date|date:'m/d/Y' }}{% endif %}" 
+                                           name="inside_planting_date" value="{% if form.inside_planting_date.value %}{{ form.inside_planting_date.value|date:'m/d/Y' }}{% elif schedule.inside_planting_date %}{{ schedule.inside_planting_date|date:'m/d/Y' }}{% endif %}" 
                                            placeholder="MM/DD/YYYY" autocomplete="off">
                                     <div class="form-text">Format: MM/DD/YYYY</div>
                                     <div class="invalid-feedback">Please enter a valid inside planting date.</div>
@@ -115,7 +132,7 @@
                                 <div class="mb-3">
                                     <label for="outside_planting_date" class="form-label">Outside Planting Date</label>
                                     <input type="text" class="form-control datepicker" id="outside_planting_date" 
-                                           name="outside_planting_date" value="{% if schedule.outside_planting_date %}{{ schedule.outside_planting_date|date:'m/d/Y' }}{% endif %}" 
+                                           name="outside_planting_date" value="{% if form.outside_planting_date.value %}{{ form.outside_planting_date.value|date:'m/d/Y' }}{% elif schedule.outside_planting_date %}{{ schedule.outside_planting_date|date:'m/d/Y' }}{% endif %}" 
                                            placeholder="MM/DD/YYYY" autocomplete="off">
                                     <div class="form-text">Format: MM/DD/YYYY</div>
                                     <div class="invalid-feedback">Please enter a valid outside planting date.</div>
@@ -125,7 +142,7 @@
                                 <div class="mb-3">
                                     <label for="harvest_date" class="form-label">Expected Harvest Date</label>
                                     <input type="text" class="form-control datepicker" id="harvest_date" 
-                                           name="harvest_date" value="{% if schedule.harvest_date %}{{ schedule.harvest_date|date:'m/d/Y' }}{% endif %}" 
+                                           name="harvest_date" value="{% if form.harvest_date.value %}{{ form.harvest_date.value|date:'m/d/Y' }}{% elif schedule.harvest_date %}{{ schedule.harvest_date|date:'m/d/Y' }}{% endif %}" 
                                            placeholder="MM/DD/YYYY" autocomplete="off">
                                     <div class="form-text">Format: MM/DD/YYYY</div>
                                     <div class="invalid-feedback">Please enter a valid harvest date.</div>
@@ -135,12 +152,12 @@
 
                         <div class="mb-3">
                             <label for="notes" class="form-label">Notes</label>
-                            <textarea class="form-control" id="notes" name="notes" rows="3">{{ schedule.notes|default:'' }}</textarea>
+                            <textarea class="form-control" id="notes" name="notes" rows="3">{% if form.notes.value %}{{ form.notes.value }}{% elif schedule.notes %}{{ schedule.notes }}{% else %}{{ schedule.notes|default:'' }}{% endif %}</textarea>
                         </div>
 
                         <div class="mb-3">
                             <label for="location_notes" class="form-label">Location Notes</label>
-                            <textarea class="form-control" id="location_notes" name="location_notes" rows="2">{{ schedule.location_notes|default:'' }}</textarea>
+                            <textarea class="form-control" id="location_notes" name="location_notes" rows="2">{% if form.location_notes.value %}{{ form.location_notes.value }}{% elif schedule.location_notes %}{{ schedule.location_notes }}{% else %}{{ schedule.location_notes|default:'' }}{% endif %}</textarea>
                             <div class="form-text">Describe where in the bed this will be planted.</div>
                         </div>
 

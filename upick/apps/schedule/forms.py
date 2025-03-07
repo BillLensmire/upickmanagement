@@ -55,8 +55,9 @@ class PlantingScheduleForm(forms.ModelForm):
     
     # Add custom date fields to handle mm/dd/yyyy format
     inside_planting_date = forms.DateField(
-        required=False,
+        required=True,
         input_formats=['%m/%d/%Y', '%Y-%m-%d'],
+        error_messages={'required': 'Inside planting date is required.'},
         widget=forms.DateInput(attrs={
             'class': 'form-control datepicker',
             'data-date-format': 'mm/dd/yyyy',
@@ -66,8 +67,9 @@ class PlantingScheduleForm(forms.ModelForm):
     )
     
     outside_planting_date = forms.DateField(
-        required=False,
+        required=True,
         input_formats=['%m/%d/%Y', '%Y-%m-%d'],
+        error_messages={'required': 'Outside planting date is required.'},
         widget=forms.DateInput(attrs={
             'class': 'form-control datepicker',
             'data-date-format': 'mm/dd/yyyy',
@@ -77,8 +79,9 @@ class PlantingScheduleForm(forms.ModelForm):
     )
     
     harvest_date = forms.DateField(
-        required=False,
+        required=True,
         input_formats=['%m/%d/%Y', '%Y-%m-%d'],
+        error_messages={'required': 'Harvest date is required.'},
         widget=forms.DateInput(attrs={
             'class': 'form-control datepicker',
             'data-date-format': 'mm/dd/yyyy',
@@ -87,11 +90,23 @@ class PlantingScheduleForm(forms.ModelForm):
         })
     )
     
+    notes = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3})
+    )
+    
+    location_notes = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2})
+    )
+    
     class Meta:
         model = PlantingSchedule
         fields = ['garden_bed', 'variety', 'garden_plan', 'quantity', 'rows', 
-                 'inside_planting_date', 'outside_planting_date', 'harvest_date']
+                 'inside_planting_date', 'outside_planting_date', 'harvest_date', 'notes', 'location_notes']
         widgets = {
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'location_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'garden_bed': forms.Select(attrs={'class': 'form-control'}),
             'variety': forms.Select(attrs={'class': 'form-control'}),
             'garden_plan': forms.Select(attrs={'class': 'form-control'}),
@@ -122,5 +137,11 @@ class PlantingScheduleForm(forms.ModelForm):
                 year=self.selected_year
             ).order_by('-year', 'name')
             
-            # Make garden_plan optional
-            self.fields['garden_plan'].required = False
+            # Make garden_plan required
+            self.fields['garden_plan'].required = True
+            
+            # Make garden_bed required
+            self.fields['garden_bed'].required = True
+
+            # Make variety required
+            self.fields['variety'].required = True

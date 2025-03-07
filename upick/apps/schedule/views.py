@@ -313,23 +313,11 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
             form.add_error(None, 'You must be a member of at least one group to create a planting schedule.')
             return self.form_invalid(form)
         
-        if not form.instance.harvest_date:
-            form.add_error(None, 'Harvest date is required.')
-            return self.form_invalid(form)
-
-        if not form.instance.outside_planting_date:
-            form.add_error(None, 'Outside planting date is required.')
-            return self.form_invalid(form)
-        
-        if not form.instance.inside_planting_date:
-            form.add_error(None, 'Inside planting date is required.')
-            return self.form_invalid(form)
-        
         messages.success(self.request, 'Planting schedule created successfully.')
         return super().form_valid(form)
     
     def form_invalid(self, form):
-        messages.error(self.request, f'Error creating schedule: {form.errors}')
+        # Don't add error message here as we're displaying errors in the template
         return super().form_invalid(form)
     
     def get_context_data(self, **kwargs):
@@ -476,17 +464,7 @@ class ScheduleUpdateView(LoginRequiredMixin, UpdateView):
             form.instance.location_notes = self.request.POST.get('location_notes')
             form.instance.status = self.request.POST.get('status')
 
-            if not form.instance.harvest_date:
-                form.add_error('harvest_date', 'Harvest date is required.')
-                return self.form_invalid(form)
-
-            if not form.instance.outside_planting_date:
-                form.add_error('outside_planting_date', 'Outside planting date is required.')
-                return self.form_invalid(form)
-            
-            if not form.instance.inside_planting_date:
-                form.add_error('inside_planting_date', 'Inside planting date is required.')
-                return self.form_invalid(form)
+            # Date validation is now handled by the form field required=True setting
 
             messages.success(self.request, 'Schedule updated successfully.')
             return super().form_valid(form)
