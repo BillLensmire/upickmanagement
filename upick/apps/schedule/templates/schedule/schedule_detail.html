@@ -22,6 +22,11 @@
             <a href="{% url 'schedule:duplicate' schedule.id %}" class="btn btn-secondary">
                 <i class="fas fa-copy"></i> Duplicate
             </a>
+            {% if next_schedule %}
+            <a href="{% url 'schedule:detail' next_schedule.id %}" class="btn btn-info mt-2">
+                <i class="fas fa-arrow-right"></i> Next Schedule
+            </a>
+            {% endif %}
         </div>
     </div>
 
@@ -34,23 +39,24 @@
                 <div class="card-body">
                     <div class="row mb-4">
                         <div class="col-md-6">
-                            <h6>Garden Bed</h6>
-                            <p>{{ schedule.garden_bed.name }}</p>
-                            
-                            <h6>Status</h6>
-                            <p>
-                                <span class="badge {% if schedule.status == 'PLANNED' %}bg-warning{% elif schedule.status == 'PLANTED' %}bg-success{% elif schedule.status == 'HARVESTED' %}bg-info{% else %}bg-danger{% endif %}">
+                            <ul class="list-unstyled">
+                                <li><strong>Planting Bed:</strong> {{ schedule.garden_bed.name }}</li>
+                                <li><strong>Bed Size:</strong> {{ schedule.garden_bed.width_feet }} x {{ schedule.garden_bed.length_feet }}</li>
+                                <li><strong>Quantity:</strong> {{ schedule.quantity }} plants in {{ schedule.rows }} row{{ schedule.rows|pluralize }}</li>
+                                <li><strong>Between Plants:</strong> {{ schedule.variety.variety_spacing_between_plants }}"</li>
+                                <li><strong>Between Rows:</strong> {{ schedule.variety.variety_spacing_between_rows }}"</li>
+                                <li><strong>Height:</strong> {{ schedule.variety.variety_plant.height_inches }}"</li>
+                                <li><strong>Status:</strong>
+                                    <span class="badge {% if schedule.status == 'PLANNED' %}bg-warning{% elif schedule.status == 'PLANTED' %}bg-success{% elif schedule.status == 'HARVESTED' %}bg-info{% else %}bg-danger{% endif %}">
                                     {{ schedule.get_status_display }}
                                 </span>
-                            </p>
-                            
-                            <h6>Quantity</h6>
-                            <p>{{ schedule.quantity }} plants in {{ schedule.rows }} row{{ schedule.rows|pluralize }}</p>
+                                </li>
+                            </ul>
                         </div>
                         <div class="col-md-6">
                             <h6>Key Information</h6>
                             <ul class="list-unstyled">
-                                <li><strong>Bed Size:</strong> {{ schedule.garden_bed.width_feet }} x {{ schedule.garden_bed.length_feet }}</li>
+                                <li><strong>Planting Method:</strong> {{ schedule.variety.variety_planting_method }}</li>
                                 {% if schedule.inside_planting_date %}
                                 <li><strong>Inside Planting:</strong> {{ schedule.inside_planting_date }}</li>
                                 {% else %}
@@ -66,12 +72,6 @@
                                 {% else %}
                                 <li><strong>Expected Harvest:</strong> Not Set</li>
                                 {% endif %}
-                                <li><strong>Planting Method:</strong> {{ schedule.variety.variety_planting_method }}</li>
-
-                            <h6><br>Spacing</h6>
-                            <li><strong>Between Plants:</strong> {{ schedule.variety.variety_spacing_between_plants }}"</li>
-                            <li><strong>Between Rows:</strong> {{ schedule.variety.variety_spacing_between_rows }}"</li>
-                            <li><strong>Height:</strong> {{ schedule.variety.variety_plant.height_inches }}"</li>
                             </ul>
                         </div>
                     </div>

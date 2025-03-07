@@ -296,6 +296,24 @@ class ScheduleDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['status_choices'] = PlantingSchedule._meta.get_field('status').choices
+        
+        # Get the next schedule ID for navigation
+        current_schedule = self.get_object()
+        user_groups = self.request.user.groups.all()
+        
+        # Get the next schedule (by ID)
+        next_schedule = PlantingSchedule.objects.filter(
+            garden_bed__group__in=user_groups,
+            id__gt=current_schedule.id
+        ).order_by('id').first()
+        
+        # If no next schedule exists, get the first one (circular navigation)
+        if not next_schedule:
+            next_schedule = PlantingSchedule.objects.filter(
+                garden_bed__group__in=user_groups
+            ).order_by('id').first()
+        
+        context['next_schedule'] = next_schedule
         return context
 
 class ScheduleCreateView(LoginRequiredMixin, CreateView):
