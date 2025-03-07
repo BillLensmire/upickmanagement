@@ -13,7 +13,7 @@ from calendar import monthcalendar, month_name
 from collections import defaultdict
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from django.db.models import Q
 from django.contrib.auth.models import Group
 from .models import PlantingSchedule, GardenBed, TodoTask, TodoList
@@ -21,6 +21,25 @@ from .forms import TodoTaskForm, TodoListForm
 from apps.plants.models import Plant, Variety
 from apps.planning.models import GardenPlan
 from .forms import PlantingScheduleForm
+from apps.planning.models import GardenConfiguration
+import json
+
+# Custom JSON encoder to handle date objects
+class DateEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, date):
+            return obj.strftime('%m/%d/%Y')  # Format as mm/dd/yyyy
+        return super().default(obj)
+
+# Helper function to ensure JSON is properly serialized
+def safe_json_dumps(data):
+    """Safely convert data to JSON string with proper date formatting"""
+    try:
+        return json.dumps(data, cls=DateEncoder, ensure_ascii=False)
+    except Exception as e:
+        print(f"Error serializing to JSON: {e}")
+        # Return an empty object as fallback
+        return '{}'
 
 def get_user_group(request):
     """Get the user's active group or return None if user has no groups.
@@ -326,6 +345,9 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
         # Get all garden beds for the user
         garden_beds = GardenBed.objects.filter(group__in=self.request.user.groups.all())
         
+        # Get garden configuration
+        garden_config = GardenConfiguration.get_settings()
+        
         # Get selected year from query parameters or use current year
         selected_year = self.request.GET.get('year')
         if selected_year:
@@ -362,7 +384,9 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
         varieties_data = {}
         for variety in varieties:
             variety_data = {
-                'days_to_germinate': None,
+                'spring_frost_date': garden_config.spring_frost_date,
+                'fall_frost_date': garden_config.fall_frost_date,
+                'days_to_germinate': variety.variety_plant.days_to_germinate,
                 'days_to_maturity': variety.variety_days_to_maturity,
                 'days_from_seed_to_transplant': variety.variety_days_from_seed_to_transplant,
                 'days_from_frost_to_transplant': variety.variety_days_from_frost_to_transplant,
@@ -383,6 +407,8 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
             varieties_data[variety.id] = variety_data
         
         context.update({
+            'spring_frost_date': garden_config.spring_frost_date,
+            'fall_frost_date': garden_config.fall_frost_date,
             'garden_beds': garden_beds,
             'varieties': varieties,
             'garden_plans': garden_plans,
@@ -392,7 +418,6 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
             'page_app': 'schedule',
             'page_name': 'schedule',
             'page_action': 'form',
-            'groups': Group.objects.all(),
             'selected_year': selected_year
         })
         return context
@@ -483,6 +508,8 @@ class ScheduleUpdateView(LoginRequiredMixin, UpdateView):
         
         # Get all garden plans for the user
         garden_plans = GardenPlan.objects.filter(group__in=self.request.user.groups.all()).order_by('year')
+
+        garden_config = GardenConfiguration.get_settings()
         
         # Get all varieties for the user's groups or with no group
         varieties = Variety.objects.filter(
@@ -490,21 +517,31 @@ class ScheduleUpdateView(LoginRequiredMixin, UpdateView):
         ).select_related('variety_plant').order_by('variety_plant__name', 'id')
         
         # Prepare JSON data for JavaScript
-        garden_plans_json = [{'id': plan.id, 'year': plan.year, 'name': plan.name} for plan in garden_plans]
-        varieties_json = [
+        garden_plans_json = json.dumps([
+            {
+                'id': plan.id,
+                'year': plan.year,
+                'name': plan.name
+            } 
+            for plan in garden_plans
+        ], ensure_ascii=False)
+
+        varieties_json = json.dumps([
             {
                 'id': variety.id, 
-                'name': variety.variety_plant.name if variety.variety_plant else '', 
+                'name': variety.variety_plant.name if variety.variety_plant else "", 
                 'variety_name': variety.variety_name
             } 
             for variety in varieties
-        ]
+        ], ensure_ascii=False)
         
         # Get variety data for date calculations
         varieties_data = {}
         for variety in varieties:
             variety_data = {
-                'days_to_germinate': None,
+                'spring_frost_date': garden_config.spring_frost_date,
+                'fall_frost_date': garden_config.fall_frost_date,
+                'days_to_germinate': variety.variety_plant.days_to_germinate if variety.variety_plant.days_to_germinate else 0,
                 'days_to_maturity': variety.variety_days_to_maturity,
                 'days_from_seed_to_transplant': variety.variety_days_from_seed_to_transplant,
                 'days_from_frost_to_transplant': variety.variety_days_from_frost_to_transplant,
@@ -522,7 +559,16 @@ class ScheduleUpdateView(LoginRequiredMixin, UpdateView):
                 if not variety_data['planting_method']:
                     variety_data['planting_method'] = variety.variety_plant.planting_method
                     
-            varieties_data[variety.id] = variety_data
+            varieties_data[str(variety.id)] = variety_data  # Convert key to string for JSON compatibility
+        
+        # Convert varieties_data to JSON for JavaScript using the custom encoder and helper function
+        varieties_data_json = safe_json_dumps(varieties_data)
+        
+        # Debug: Print the first few items of the varieties_data dictionary
+        print(f"Varieties data sample: {list(varieties_data.items())[:3]}")
+        print(f"Varieties data keys: {list(varieties_data.keys())[:10]}")  
+        print(f"JSON type: {type(varieties_data_json)}")
+        print(f"JSON sample: {varieties_data_json[:100]}...")
         
         context.update({
             'garden_beds': garden_beds,
@@ -530,8 +576,9 @@ class ScheduleUpdateView(LoginRequiredMixin, UpdateView):
             'varieties': varieties,
             'garden_plans_json': garden_plans_json,
             'varieties_json': varieties_json,
+            'varieties_data_json': varieties_data_json,
             'status_choices': PlantingSchedule._meta.get_field('status').choices,
-            'varieties_data': varieties_data,
+            'varieties_data': varieties_data,  # Keep the original for Python template usage if needed
             'page_app': 'schedule',
             'page_name': 'schedule',
             'page_action': 'edit',

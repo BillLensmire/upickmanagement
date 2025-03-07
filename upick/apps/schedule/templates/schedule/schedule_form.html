@@ -118,10 +118,25 @@
                         {% endif %}
 
                         <div class="row" id="variety-info-row">
+                            <div class="col-md-6">
+                                <div class="mb-3 d-flex">
+                                    <label for="spring_frost_date" class="form-label me-2">Spring Frost Date:</label>
+                                    <div id="spring-frost-date">{% if schedule and schedule.variety %}{{ schedule.variety.spring_frost_date|default:"--" }}{% else %}--{% endif %}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3 d-flex">
+                                    <label for="fall_frost_date" class="form-label me-2">Fall Frost Date:</label>
+                                    <div id="fall-frost-date">{% if schedule and schedule.variety %}{{ schedule.variety.fall_frost_date|default:"--" }}{% else %}--{% endif %}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row" id="variety-info-row">
                             <div class="col-md-3">
                                 <div class="mb-3">
                                     <label for="days_to_germinate" class="form-label">Days to Germinate</label>
-                                    <div id="days-to-germinate">{% if schedule and schedule.variety %}{{ schedule.variety.variety_days_to_germinate|default:"--" }}{% else %}--{% endif %}</div>
+                                    <div id="days-to-germinate">{% if schedule and schedule.variety %}{{ schedule.variety.variety_plant.days_to_germinate|default:"--" }}{% else %}--{% endif %}</div>
                                 </div>
                             </div>
                             <div class="col-md-3">
@@ -201,11 +216,110 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- JSON data for JavaScript -->
+{{ garden_plans_json|json_script:"garden-plans-data" }}
+{{ varieties_json|json_script:"varieties-data" }}
+{{ varieties_data_json|safe|json_script:"varieties-data-json" }}
+
 <script>
 // Variety data for date calculations
-const varietiesData = {{ varieties_data|safe }};
-const gardenPlans = {{ garden_plans_json|safe }};
-const allVarieties = {{ varieties_json|safe }};
+let gardenPlans, allVarieties, varietiesData;
+
+// Log the raw JSON data before parsing
+const rawVarietiesDataJson = document.getElementById('varieties-data-json').textContent;
+console.log('Raw varieties_data_json:', rawVarietiesDataJson);
+
+// Function to safely parse JSON with error handling
+function safeJSONParse(jsonString, defaultValue = {}) {
+    try {
+        return JSON.parse(jsonString);
+    } catch (e) {
+        console.error('Error parsing JSON:', e.message);
+        return defaultValue;
+    }
+}
+
+try {
+    // Parse the JSON data from the script tags
+    gardenPlans = safeJSONParse(document.getElementById('garden-plans-data').textContent, []);
+    allVarieties = safeJSONParse(document.getElementById('varieties-data').textContent, []);
+    
+    // Special handling for varieties_data_json
+    const varietiesDataText = document.getElementById('varieties-data-json').textContent;
+    
+    // Try to parse it directly
+    try {
+        varietiesData = JSON.parse(varietiesDataText);
+    } catch (jsonError) {
+        console.error('Initial parse error:', jsonError.message);
+        
+        // If it's a string that looks like JSON but has escaped quotes, try to clean it up
+        if (varietiesDataText.includes('\\"')) {
+            console.log('Detected escaped quotes, attempting to clean');
+            const cleanedText = varietiesDataText.replace(/\\\\\\"([^\\"]+)\\\\\\":/g, '"$1":');
+            try {
+                varietiesData = JSON.parse(cleanedText);
+            } catch (e) {
+                console.error('Failed to parse cleaned text:', e.message);
+                varietiesData = {};
+            }
+        } else {
+            // If it's a literal string representation of an object
+            console.log('Attempting to evaluate as object literal');
+            try {
+                // Create a safe object from the string (if it looks like a valid object)
+                if (varietiesDataText.trim().startsWith('{') && varietiesDataText.trim().endsWith('}')) {
+                    // Use Function constructor as a last resort (safer than eval)
+                    varietiesData = Function('return ' + varietiesDataText)();
+                } else {
+                    varietiesData = {};
+                }
+            } catch (e) {
+                console.error('Failed to evaluate as object:', e.message);
+                varietiesData = {};
+            }
+        }
+    }
+
+    console.log('varietiesData 22:', varietiesData);
+    
+    // Ensure varietiesData is an object
+    //if (typeof varietiesData !== 'object' || varietiesData === null) {
+    //    console.error('varietiesData is not an object after all parsing attempts');
+    //    varietiesData = {};
+    //}
+    
+    console.log('First few keys:', Object.keys(varietiesData).slice(0, 5));
+    console.log('Final varietiesData type:', typeof varietiesData);
+    console.log('Is varietiesData array?', Array.isArray(varietiesData));
+    //if (typeof varietiesData === 'object') {
+    //    console.log('First few keys:', Object.keys(varietiesData).slice(0, 5));
+    //}
+} catch (e) {
+    console.error('Error in main parsing block:', e.message);
+    gardenPlans = [];
+    allVarieties = [];
+    varietiesData = {};
+}
+
+// Debug logging
+console.log('Garden Plans (type):', typeof gardenPlans, Array.isArray(gardenPlans));
+console.log('Garden Plans:', gardenPlans);
+console.log('All Varieties (type):', typeof allVarieties, Array.isArray(allVarieties));
+console.log('All Varieties:', allVarieties);
+console.log('Varieties Data (type):', typeof varietiesData, Array.isArray(varietiesData));
+console.log('Varieties Data:', varietiesData);
+
+// Log all keys in varietiesData
+const keys = Object.keys(varietiesData);
+console.log('Varieties Data Keys:', keys);
+console.log('Key types:', keys.map(k => typeof k));
+
+const varietiesData2 = JSON.parse(varietiesData);
+
+// Check if key '8' exists
+console.log('Has key "8"?', '8' in varietiesData2);
+console.log('Direct access varietiesData2["8"]:', varietiesData2['8']);
 
 document.addEventListener('DOMContentLoaded', function() {
     // Form validation
@@ -237,9 +351,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const gardenPlanSelect = document.getElementById('garden_plan');
 
     function calculatePlantingDates(harvestDate, varietyId) {
-        if (!harvestDate || !varietyId || !varietiesData[varietyId]) return;
+        if (!harvestDate || !varietyId || !varietiesData2[varietyId]) return;
 
-        const variety = varietiesData[varietyId];
+        const variety = varietiesData2[varietyId];
         const harvestDateObj = parseDate(harvestDate);
         if (!harvestDateObj) return;
         
@@ -312,6 +426,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Function to update variety information display
     function updateVarietyInfo(varietyId) {
+        console.log('Updating variety info for:', varietyId);
         if (!varietyId) {
             document.getElementById('days-to-germinate').textContent = '--';
             document.getElementById('days-to-maturity').textContent = '--';
@@ -320,22 +435,77 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Find the variety in the varieties list
-        const variety = allVarieties.find(v => v.id == varietyId);
-        if (!variety) return;
+        // Convert varietyId to string since JSON object keys are strings
+        const varietyIdStr = String(varietyId);
+        console.log('Looking for variety with ID (string):', varietyIdStr);
+        console.log('Available keys in varietiesData2:', Object.keys(varietiesData2));
         
-        // Get variety data from the varieties_data dictionary
-        const varietyData = varietiesData[varietyId] || {};
+        // Try to find the variety data using different approaches
+        let varietyData = null;
+        
+        // Log all keys for debugging
+        console.log('All keys in varietiesData2:', Object.keys(varietiesData2));
+        
+        // Direct access - this should work if the keys are properly formatted
+        if (varietiesData2.hasOwnProperty(varietyIdStr)) {
+            varietyData = varietiesData2[varietyIdStr];
+            console.log('Found directly with key:', varietyIdStr);
+        } else {
+            console.log('Key not found directly:', varietyIdStr);
+            
+            // Try to find the key by iterating through all keys (case-sensitive)
+            for (const key of Object.keys(varietiesData2)) {
+                console.log('Comparing:', key, varietyIdStr, key === varietyIdStr);
+                if (key === varietyIdStr) {
+                    varietyData = varietiesData2[key];
+                    console.log('Found by iteration with key:', key);
+                    break;
+                }
+            }
+            
+            // If still not found, try to find a variety with the same ID in allVarieties
+            if (!varietyData && Array.isArray(allVarieties)) {
+                const variety = allVarieties.find(v => String(v.id) === varietyIdStr);
+                if (variety) {
+                    console.log('Found variety in allVarieties:', variety);
+                    // Create a default variety data object with mm/dd/yyyy date format
+                    varietyData = {
+                        spring_frost_date: '05/20/2025',
+                        fall_frost_date: '09/20/2025',
+                        days_to_germinate: 0,
+                        days_to_maturity: 0,
+                        days_from_seed_to_transplant: 0,
+                        days_from_frost_to_transplant: 0,
+                        planting_method: 'DIRECT'
+                    };
+                }
+            }
+        }
+        
+        console.log('Variety data for ID', varietyIdStr, ':', varietyData);
+        
+        if (!varietyData) {
+            console.error('Variety data not found for ID:', varietyIdStr);
+            document.getElementById('days-to-germinate').textContent = '--';
+            document.getElementById('days-to-maturity').textContent = '--';
+            document.getElementById('days-from-seed-to-transplant').textContent = '--';
+            document.getElementById('days-from-frost-to-transplant').textContent = '--';
+            return;
+        }
         
         // Update the display fields
         document.getElementById('days-to-germinate').textContent = 
-            varietyData.days_to_germinate || '--';
+            (varietyData.days_to_germinate !== undefined) ? varietyData.days_to_germinate : '--';
         document.getElementById('days-to-maturity').textContent = 
-            varietyData.days_to_maturity || '--';
+            (varietyData.days_to_maturity !== undefined) ? varietyData.days_to_maturity : '--';
         document.getElementById('days-from-seed-to-transplant').textContent = 
-            varietyData.days_from_seed_to_transplant || '--';
+            (varietyData.days_from_seed_to_transplant !== undefined) ? varietyData.days_from_seed_to_transplant : '--';
         document.getElementById('days-from-frost-to-transplant').textContent = 
-            varietyData.days_from_frost_to_transplant || '--';
+            (varietyData.days_from_frost_to_transplant !== undefined) ? varietyData.days_from_frost_to_transplant : '--';
+        document.getElementById('spring-frost-date').textContent = 
+            (varietyData.spring_frost_date !== undefined) ? varietyData.spring_frost_date : '--';
+        document.getElementById('fall-frost-date').textContent = 
+            (varietyData.fall_frost_date !== undefined) ? varietyData.fall_frost_date : '--';
     }
     
     // Initialize variety info if a variety is already selected
