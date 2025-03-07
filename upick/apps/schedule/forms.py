@@ -1,6 +1,9 @@
 from django import forms
-from .models import TodoTask, TodoList
+from .models import TodoTask, TodoList, PlantingSchedule, GardenBed
 from django.contrib.auth.models import Group
+from apps.plants.models import Variety
+from apps.planning.models import GardenPlan
+from django.db.models import Q
 
 class TodoTaskForm(forms.ModelForm):
     """Form for creating and updating Todo Tasks"""
@@ -33,3 +36,48 @@ class TodoListForm(forms.ModelForm):
             'tasks': forms.SelectMultiple(attrs={'class': 'form-control'}),
             'group': forms.Select(attrs={'class': 'form-control'}),
         }
+
+
+class PlantingScheduleForm(forms.ModelForm):
+    """Form for creating and updating Planting Schedules"""
+    
+    class Meta:
+        model = PlantingSchedule
+        fields = ['garden_bed', 'variety', 'garden_plan', 'quantity', 'rows', 
+                 'inside_planting_date', 'outside_planting_date', 'harvest_date']
+        widgets = {
+            'garden_bed': forms.Select(attrs={'class': 'form-control'}),
+            'variety': forms.Select(attrs={'class': 'form-control'}),
+            'garden_plan': forms.Select(attrs={'class': 'form-control'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
+            'rows': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
+            'inside_planting_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'outside_planting_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'harvest_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        self.selected_year = kwargs.pop('selected_year', None)
+        super().__init__(*args, **kwargs)
+        
+        if self.request and self.request.user.groups.exists():
+            # Filter garden beds by the selected year and user's groups
+            self.fields['garden_bed'].queryset = GardenBed.objects.filter(
+                group__in=self.request.user.groups.all(),
+                year=self.selected_year
+            )
+            
+            # Filter varieties by user's groups
+            self.fields['variety'].queryset = Variety.objects.filter(
+                Q(variety_plant__group__in=self.request.user.groups.all()) | Q(variety_plant__group=None)
+            ).select_related('variety_plant')
+            
+            # Filter garden plans by the selected year and user's groups
+            self.fields['garden_plan'].queryset = GardenPlan.objects.filter(
+                group__in=self.request.user.groups.all(), 
+                year=self.selected_year
+            ).order_by('-year', 'name')
+            
+            # Make garden_plan optional
+            self.fields['garden_plan'].required = False

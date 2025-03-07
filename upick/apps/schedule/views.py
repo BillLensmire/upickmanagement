@@ -20,6 +20,7 @@ from .models import PlantingSchedule, GardenBed, TodoTask, TodoList
 from .forms import TodoTaskForm, TodoListForm
 from apps.plants.models import Plant, Variety
 from apps.planning.models import GardenPlan
+from .forms import PlantingScheduleForm
 
 def get_user_group(request):
     """Get the user's active group or return None if user has no groups.
@@ -274,118 +275,117 @@ def schedule_detail(request, schedule_id):
     }
     return render(request, 'schedule/schedule_detail.html', context)
 
-@login_required
-def schedule_create(request):
-    """Create a new planting schedule."""
-    if request.method == 'POST':
-        garden_bed_id = request.POST.get('garden_bed')
-        variety_id = request.POST.get('variety')
-        quantity = request.POST.get('quantity')
-        rows = request.POST.get('rows')
-        
-        try:
-            garden_bed = get_object_or_404(GardenBed, id=garden_bed_id, group__in=request.user.groups.all())
-            variety = get_object_or_404(Variety, id=variety_id, variety_plant__group__in=request.user.groups.all())
-            
-            garden_plan_id = request.POST.get('garden_plan')
-            garden_plan = None
-            if garden_plan_id:
-                garden_plan = get_object_or_404(GardenPlan, id=garden_plan_id, group__in=request.user.groups.all())
-
-            # Handle dates
-            inside_date = request.POST.get('inside_planting_date')
-            outside_date = request.POST.get('outside_planting_date')
-            harvest_date = request.POST.get('harvest_date')
-
-            schedule = PlantingSchedule.objects.create(
-                garden_bed=garden_bed,
-                variety=variety,
-                garden_plan=garden_plan,
-                quantity=quantity,
-                rows=rows,
-                inside_planting_date=datetime.strptime(inside_date, '%Y-%m-%d').date() if inside_date else None,
-                outside_planting_date=datetime.strptime(outside_date, '%Y-%m-%d').date() if outside_date else None,
-                harvest_date=datetime.strptime(harvest_date, '%Y-%m-%d').date() if harvest_date else None,
-                group=get_user_group(request)
-            )
-            
-            messages.success(request, 'Planting schedule created successfully.')
-            return redirect('schedule:detail', schedule_id=schedule.id)
-            
-        except Exception as e:
-            messages.error(request, f'Error creating schedule: {str(e)}')
-            # Get selected_year from POST data if it exists
-            selected_year = request.POST.get('selected_year')
-            if selected_year:
-                return redirect(f'schedule:list?year={selected_year}')
-            return redirect('schedule:list')
+class ScheduleCreateView(LoginRequiredMixin, CreateView):
+    """Class-based view for creating a new planting schedule."""
+    model = PlantingSchedule
+    form_class = PlantingScheduleForm
+    template_name = 'schedule/schedule_form.html'
     
-    # Get selected year from query parameters (passed from the schedule list page)
-    selected_year = request.GET.get('year')
-    if selected_year:
-        try:
-            selected_year = int(selected_year)
-        except (ValueError, TypeError):
-            # If year is invalid, use current year as default
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass request to the form for filtering querysets
+        kwargs['request'] = self.request
+        
+        # Get selected year from query parameters or use current year
+        selected_year = self.request.GET.get('year')
+        if selected_year:
+            try:
+                selected_year = int(selected_year)
+            except (ValueError, TypeError):
+                selected_year = datetime.now().year
+        else:
             selected_year = datetime.now().year
-    else:
-        # If no year provided, use current year as default
-        selected_year = datetime.now().year
-
-    # Filter garden beds by the selected year
-    garden_beds = GardenBed.objects.filter(group__in=request.user.groups.all(), year=selected_year)
-    varieties = Variety.objects.filter(
-        Q(variety_plant__group__in=request.user.groups.all()) | Q(variety_plant__group=None)
-        ).select_related('variety_plant')
-    garden_plans = GardenPlan.objects.filter(group__in=request.user.groups.all(), year=selected_year).order_by('-year', 'name')
+            
+        kwargs['selected_year'] = selected_year
+        return kwargs
     
-    # Prepare JSON data for JavaScript
-    garden_plans_json = [{'id': plan.id, 'year': plan.year, 'name': plan.name} for plan in garden_plans]
-    varieties_json = [
-        {
-            'id': variety.id, 
-            'name': variety.variety_plant.name if variety.variety_plant else '', 
-            'variety_name': variety.variety_name
-        } 
-        for variety in varieties
-    ]
+    def get_success_url(self):
+        return reverse_lazy('schedule:detail', kwargs={'schedule_id': self.object.id})
     
-    # Get variety data for date calculations
-    varieties_data = {}
-    for variety in varieties:
-        variety_data = {
-            'days_to_maturity': variety.variety_days_to_maturity,
-            'days_from_seed_to_transplant': variety.variety_days_from_seed_to_transplant,
-            'planting_method': variety.variety_planting_method,
-        }
+    def form_valid(self, form):
+        # Set the group for the planting schedule
+        form.instance.group = get_user_group(self.request)
+        if not form.instance.group:
+            form.add_error(None, 'You must be a member of at least one group to create a planting schedule.')
+            return self.form_invalid(form)
+            
+        messages.success(self.request, 'Planting schedule created successfully.')
+        return super().form_valid(form)
+    
+    def form_invalid(self, form):
+        messages.error(self.request, f'Error creating schedule: {form.errors}')
+        return super().form_invalid(form)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         
-        # If variety doesn't have values, use the plant's values
-        if variety.variety_plant:
-            if not variety_data['days_to_maturity'] and variety.variety_plant.days_to_maturity:
-                variety_data['days_to_maturity'] = variety.variety_plant.days_to_maturity
-                
-            if not variety_data['days_from_seed_to_transplant'] and variety.variety_plant.days_from_seed_to_transplant:
-                variety_data['days_from_seed_to_transplant'] = variety.variety_plant.days_from_seed_to_transplant
-                
-            if not variety_data['planting_method']:
-                variety_data['planting_method'] = variety.variety_plant.planting_method
-                
-        varieties_data[variety.id] = variety_data
-
-    context = {
-        'garden_beds': garden_beds,
-        'varieties': varieties,
-        'garden_plans': garden_plans,
-        'garden_plans_json': garden_plans_json,
-        'varieties_json': varieties_json,
-        'varieties_data': varieties_data,
-        'page_app': 'schedule',
-        'page_name': 'schedule',
-        'page_action': 'form',
-        'groups': Group.objects.all(),
-        'selected_year': selected_year  # Add selected year to context
-    }
-    return render(request, 'schedule/schedule_form.html', context)
+        # Get selected year from query parameters or use current year
+        selected_year = self.request.GET.get('year')
+        if selected_year:
+            try:
+                selected_year = int(selected_year)
+            except (ValueError, TypeError):
+                selected_year = datetime.now().year
+        else:
+            selected_year = datetime.now().year
+        
+        # Get varieties for JavaScript data
+        varieties = Variety.objects.filter(
+            Q(variety_plant__group__in=self.request.user.groups.all()) | Q(variety_plant__group=None)
+        ).select_related('variety_plant')
+        
+        # Get garden plans for JavaScript data
+        garden_plans = GardenPlan.objects.filter(
+            group__in=self.request.user.groups.all(), 
+            year=selected_year
+        ).order_by('-year', 'name')
+        
+        # Prepare JSON data for JavaScript
+        garden_plans_json = [{'id': plan.id, 'year': plan.year, 'name': plan.name} for plan in garden_plans]
+        varieties_json = [
+            {
+                'id': variety.id, 
+                'name': variety.variety_plant.name if variety.variety_plant else '', 
+                'variety_name': variety.variety_name
+            } 
+            for variety in varieties
+        ]
+        
+        # Get variety data for date calculations
+        varieties_data = {}
+        for variety in varieties:
+            variety_data = {
+                'days_to_maturity': variety.variety_days_to_maturity,
+                'days_from_seed_to_transplant': variety.variety_days_from_seed_to_transplant,
+                'planting_method': variety.variety_planting_method,
+            }
+            
+            # If variety doesn't have values, use the plant's values
+            if variety.variety_plant:
+                if not variety_data['days_to_maturity'] and variety.variety_plant.days_to_maturity:
+                    variety_data['days_to_maturity'] = variety.variety_plant.days_to_maturity
+                    
+                if not variety_data['days_from_seed_to_transplant'] and variety.variety_plant.days_from_seed_to_transplant:
+                    variety_data['days_from_seed_to_transplant'] = variety.variety_plant.days_from_seed_to_transplant
+                    
+                if not variety_data['planting_method']:
+                    variety_data['planting_method'] = variety.variety_plant.planting_method
+                    
+            varieties_data[variety.id] = variety_data
+        
+        context.update({
+            'varieties': varieties,
+            'garden_plans': garden_plans,
+            'garden_plans_json': garden_plans_json,
+            'varieties_json': varieties_json,
+            'varieties_data': varieties_data,
+            'page_app': 'schedule',
+            'page_name': 'schedule',
+            'page_action': 'form',
+            'groups': Group.objects.all(),
+            'selected_year': selected_year
+        })
+        return context
 
 @login_required
 def schedule_duplicate(request, schedule_id):

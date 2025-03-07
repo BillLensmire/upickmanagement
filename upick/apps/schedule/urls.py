@@ -28,7 +28,7 @@ urlpatterns = [
     
     # Planting Schedule URLs
     path('', views.schedule_list, name='list'),
-    path('create/', views.schedule_create, name='create'),
+    path('create/', views.ScheduleCreateView.as_view(), name='create'),
     path('<int:schedule_id>/', views.schedule_detail, name='detail'),
     path('<int:schedule_id>/edit/', views.schedule_edit, name='edit'),
     path('<int:schedule_id>/duplicate/', views.schedule_duplicate, name='duplicate'),
