@@ -264,16 +264,20 @@ def schedule_list(request):
     }
     return render(request, 'schedule/schedule_list.html', context)
 
-@login_required
-def schedule_detail(request, schedule_id):
-    """Display details of a specific planting schedule."""
-    schedule = get_object_or_404(PlantingSchedule, id=schedule_id, garden_bed__group__in=request.user.groups.all())
+class ScheduleDetailView(LoginRequiredMixin, DetailView):
+    """Class-based view for displaying details of a specific planting schedule."""
+    model = PlantingSchedule
+    template_name = 'schedule/schedule_detail.html'
+    context_object_name = 'schedule'
+    pk_url_kwarg = 'schedule_id'
     
-    context = {
-        'schedule': schedule,
-        'status_choices': PlantingSchedule._meta.get_field('status').choices,
-    }
-    return render(request, 'schedule/schedule_detail.html', context)
+    def get_queryset(self):
+        return PlantingSchedule.objects.filter(garden_bed__group__in=self.request.user.groups.all())
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['status_choices'] = PlantingSchedule._meta.get_field('status').choices
+        return context
 
 class ScheduleCreateView(LoginRequiredMixin, CreateView):
     """Class-based view for creating a new planting schedule."""
@@ -415,111 +419,114 @@ def schedule_duplicate(request, schedule_id):
     messages.success(request, f'Successfully duplicated planting schedule for {original_schedule.variety.variety_name}')
     return redirect('schedule:edit', schedule_id=new_schedule.id)
 
-@login_required
-def schedule_edit(request, schedule_id):
-    """Edit an existing planting schedule."""
-    schedule = get_object_or_404(PlantingSchedule, id=schedule_id, garden_bed__group__in=request.user.groups.all())
+class ScheduleUpdateView(LoginRequiredMixin, UpdateView):
+    """Class-based view for editing an existing planting schedule."""
+    model = PlantingSchedule
+    form_class = PlantingScheduleForm
+    template_name = 'schedule/schedule_form.html'
+    context_object_name = 'schedule'
+    pk_url_kwarg = 'schedule_id'
     
-    if request.method == 'POST':
-        try:
-            # Handle garden bed change
-            garden_bed_id = request.POST.get('garden_bed')
-            if garden_bed_id:
-                garden_bed = get_object_or_404(GardenBed, id=garden_bed_id, group__in=request.user.groups.all())
-                schedule.garden_bed = garden_bed
-
-            # Handle garden plan change
-            garden_plan_id = request.POST.get('garden_plan')
-            if garden_plan_id:
-                garden_plan = get_object_or_404(GardenPlan, id=garden_plan_id, group__in=request.user.groups.all())
-                schedule.garden_plan = garden_plan
-                
-            # Handle variety change
-            variety_id = request.POST.get('variety')
-            if variety_id:
-                variety = get_object_or_404(Variety, id=variety_id)
-                schedule.variety = variety
-
-            schedule.quantity = request.POST.get('quantity')
-            schedule.rows = request.POST.get('rows')
-            schedule.notes = request.POST.get('notes')
-            schedule.location_notes = request.POST.get('location_notes')
-            schedule.status = request.POST.get('status')
-            
-            # Handle dates
-            inside_date = request.POST.get('inside_planting_date')
-            outside_date = request.POST.get('outside_planting_date')
-            harvest_date = request.POST.get('harvest_date')
-            
-            if inside_date:
-                schedule.inside_planting_date = datetime.strptime(inside_date, '%Y-%m-%d').date()
-            if outside_date:
-                schedule.outside_planting_date = datetime.strptime(outside_date, '%Y-%m-%d').date()
-            if harvest_date:
-                schedule.harvest_date = datetime.strptime(harvest_date, '%Y-%m-%d').date()
-            
-            schedule.save()
-            messages.success(request, 'Schedule updated successfully.')
-            return redirect('schedule:detail', schedule_id=schedule.id)
-            
-        except Exception as e:
-            messages.error(request, f'Error updating schedule: {str(e)}')
+    def get_queryset(self):
+        """Ensure user can only edit schedules from their groups."""
+        return PlantingSchedule.objects.filter(garden_bed__group__in=self.request.user.groups.all())
     
-    # Get all garden beds for the user
-    garden_beds = GardenBed.objects.filter(group__in=request.user.groups.all())
-    
-    # Get all garden plans for the user
-    garden_plans = GardenPlan.objects.filter(group__in=request.user.groups.all()).order_by('year')
-    
-    # Get all varieties for the user's groups or with no group
-    varieties = Variety.objects.filter(
-        Q(variety_plant__group__in=request.user.groups.all()) | Q(variety_plant__group=None)
-    ).select_related('variety_plant').order_by('variety_plant__name', 'id')
-    
-    # Prepare JSON data for JavaScript
-    garden_plans_json = [{'id': plan.id, 'year': plan.year, 'name': plan.name} for plan in garden_plans]
-    varieties_json = [
-        {
-            'id': variety.id, 
-            'name': variety.variety_plant.name if variety.variety_plant else '', 
-            'variety_name': variety.variety_name
-        } 
-        for variety in varieties
-    ]
-    
-    # Get variety data for date calculations
-    varieties_data = {}
-    for variety in varieties:
-        variety_data = {
-            'days_to_maturity': variety.variety_days_to_maturity,
-            'days_from_seed_to_transplant': variety.variety_days_from_seed_to_transplant,
-            'planting_method': variety.variety_planting_method,
-        }
+    def get_form_kwargs(self):
+        """Pass request to the form."""
+        kwargs = super().get_form_kwargs()
+        kwargs['request'] = self.request
         
-        # If variety doesn't have values, use the plant's values
-        if variety.variety_plant:
-            if not variety_data['days_to_maturity'] and variety.variety_plant.days_to_maturity:
-                variety_data['days_to_maturity'] = variety.variety_plant.days_to_maturity
-                
-            if not variety_data['days_from_seed_to_transplant'] and variety.variety_plant.days_from_seed_to_transplant:
-                variety_data['days_from_seed_to_transplant'] = variety.variety_plant.days_from_seed_to_transplant
-                
-            if not variety_data['planting_method']:
-                variety_data['planting_method'] = variety.variety_plant.planting_method
-                
-        varieties_data[variety.id] = variety_data
-
-    context = {
-        'schedule': schedule,
-        'garden_beds': garden_beds,
-        'garden_plans': garden_plans,
-        'varieties': varieties,
-        'garden_plans_json': garden_plans_json,
-        'varieties_json': varieties_json,
-        'status_choices': PlantingSchedule._meta.get_field('status').choices,
-        'varieties_data': varieties_data,
-    }
-    return render(request, 'schedule/schedule_form.html', context)
+        # Get the year from the garden plan or current year
+        schedule = self.get_object()
+        if schedule.garden_plan:
+            selected_year = schedule.garden_plan.year
+        elif schedule.garden_bed and schedule.garden_bed.year:
+            selected_year = schedule.garden_bed.year
+        else:
+            selected_year = datetime.now().year
+            
+        kwargs['selected_year'] = selected_year
+        return kwargs
+    
+    def get_success_url(self):
+        """Redirect to the schedule detail page."""
+        return reverse_lazy('schedule:detail', kwargs={'schedule_id': self.object.id})
+    
+    def form_valid(self, form):
+        """Process the form data and save the schedule."""
+        try:
+            # Additional fields not in the form
+            form.instance.notes = self.request.POST.get('notes')
+            form.instance.location_notes = self.request.POST.get('location_notes')
+            form.instance.status = self.request.POST.get('status')
+            
+            messages.success(self.request, 'Schedule updated successfully.')
+            return super().form_valid(form)
+        except Exception as e:
+            messages.error(self.request, f'Error updating schedule: {str(e)}')
+            return self.form_invalid(form)
+    
+    def get_context_data(self, **kwargs):
+        """Add additional context data for the template."""
+        context = super().get_context_data(**kwargs)
+        
+        # Get all garden beds for the user
+        garden_beds = GardenBed.objects.filter(group__in=self.request.user.groups.all())
+        
+        # Get all garden plans for the user
+        garden_plans = GardenPlan.objects.filter(group__in=self.request.user.groups.all()).order_by('year')
+        
+        # Get all varieties for the user's groups or with no group
+        varieties = Variety.objects.filter(
+            Q(variety_plant__group__in=self.request.user.groups.all()) | Q(variety_plant__group=None)
+        ).select_related('variety_plant').order_by('variety_plant__name', 'id')
+        
+        # Prepare JSON data for JavaScript
+        garden_plans_json = [{'id': plan.id, 'year': plan.year, 'name': plan.name} for plan in garden_plans]
+        varieties_json = [
+            {
+                'id': variety.id, 
+                'name': variety.variety_plant.name if variety.variety_plant else '', 
+                'variety_name': variety.variety_name
+            } 
+            for variety in varieties
+        ]
+        
+        # Get variety data for date calculations
+        varieties_data = {}
+        for variety in varieties:
+            variety_data = {
+                'days_to_maturity': variety.variety_days_to_maturity,
+                'days_from_seed_to_transplant': variety.variety_days_from_seed_to_transplant,
+                'planting_method': variety.variety_planting_method,
+            }
+            
+            # If variety doesn't have values, use the plant's values
+            if variety.variety_plant:
+                if not variety_data['days_to_maturity'] and variety.variety_plant.days_to_maturity:
+                    variety_data['days_to_maturity'] = variety.variety_plant.days_to_maturity
+                    
+                if not variety_data['days_from_seed_to_transplant'] and variety.variety_plant.days_from_seed_to_transplant:
+                    variety_data['days_from_seed_to_transplant'] = variety.variety_plant.days_from_seed_to_transplant
+                    
+                if not variety_data['planting_method']:
+                    variety_data['planting_method'] = variety.variety_plant.planting_method
+                    
+            varieties_data[variety.id] = variety_data
+        
+        context.update({
+            'garden_beds': garden_beds,
+            'garden_plans': garden_plans,
+            'varieties': varieties,
+            'garden_plans_json': garden_plans_json,
+            'varieties_json': varieties_json,
+            'status_choices': PlantingSchedule._meta.get_field('status').choices,
+            'varieties_data': varieties_data,
+            'page_app': 'schedule',
+            'page_name': 'schedule',
+            'page_action': 'edit',
+        })
+        return context
 
 @require_POST
 def update_planting_date(request, schedule_id):
