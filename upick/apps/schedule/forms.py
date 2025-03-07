@@ -1,4 +1,5 @@
 from django import forms
+from datetime import datetime
 from .models import TodoTask, TodoList, PlantingSchedule, GardenBed
 from django.contrib.auth.models import Group
 from apps.plants.models import Variety
@@ -8,6 +9,18 @@ from django.db.models import Q
 class TodoTaskForm(forms.ModelForm):
     """Form for creating and updating Todo Tasks"""
     
+    # Add custom date field to handle mm/dd/yyyy format
+    due_date = forms.DateField(
+        required=False,
+        input_formats=['%m/%d/%Y', '%Y-%m-%d'],
+        widget=forms.DateInput(attrs={
+            'class': 'form-control datepicker',
+            'data-date-format': 'mm/dd/yyyy',
+            'placeholder': 'MM/DD/YYYY',
+            'autocomplete': 'off'
+        })
+    )
+    
     class Meta:
         model = TodoTask
         fields = ['title', 'description', 'due_date', 'priority', 'status', 
@@ -15,7 +28,6 @@ class TodoTaskForm(forms.ModelForm):
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'due_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'priority': forms.Select(attrs={'class': 'form-control'}),
             'status': forms.Select(attrs={'class': 'form-control'}),
             'garden_bed': forms.Select(attrs={'class': 'form-control'}),
@@ -41,6 +53,40 @@ class TodoListForm(forms.ModelForm):
 class PlantingScheduleForm(forms.ModelForm):
     """Form for creating and updating Planting Schedules"""
     
+    # Add custom date fields to handle mm/dd/yyyy format
+    inside_planting_date = forms.DateField(
+        required=False,
+        input_formats=['%m/%d/%Y', '%Y-%m-%d'],
+        widget=forms.DateInput(attrs={
+            'class': 'form-control datepicker',
+            'data-date-format': 'mm/dd/yyyy',
+            'placeholder': 'MM/DD/YYYY',
+            'autocomplete': 'off'
+        })
+    )
+    
+    outside_planting_date = forms.DateField(
+        required=False,
+        input_formats=['%m/%d/%Y', '%Y-%m-%d'],
+        widget=forms.DateInput(attrs={
+            'class': 'form-control datepicker',
+            'data-date-format': 'mm/dd/yyyy',
+            'placeholder': 'MM/DD/YYYY',
+            'autocomplete': 'off'
+        })
+    )
+    
+    harvest_date = forms.DateField(
+        required=False,
+        input_formats=['%m/%d/%Y', '%Y-%m-%d'],
+        widget=forms.DateInput(attrs={
+            'class': 'form-control datepicker',
+            'data-date-format': 'mm/dd/yyyy',
+            'placeholder': 'MM/DD/YYYY',
+            'autocomplete': 'off'
+        })
+    )
+    
     class Meta:
         model = PlantingSchedule
         fields = ['garden_bed', 'variety', 'garden_plan', 'quantity', 'rows', 
@@ -51,9 +97,6 @@ class PlantingScheduleForm(forms.ModelForm):
             'garden_plan': forms.Select(attrs={'class': 'form-control'}),
             'quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
             'rows': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
-            'inside_planting_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'outside_planting_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'harvest_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
         }
     
     def __init__(self, *args, **kwargs):

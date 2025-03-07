@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load static %}
 {% with page_app='schedule' page_name='schedule' page_action='form' %}
 {% block title %}{% if schedule %}Edit{% else %}Create{% endif %} Schedule - Garden Planner{% endblock %}
 
@@ -104,22 +104,31 @@
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label for="inside_planting_date" class="form-label">Inside Planting Date</label>
-                                    <input type="date" class="form-control" id="inside_planting_date" 
-                                           name="inside_planting_date" value="{% if schedule.inside_planting_date %}{{ schedule.inside_planting_date|date:'Y-m-d' }}{% endif %}">
+                                    <input type="text" class="form-control datepicker" id="inside_planting_date" 
+                                           name="inside_planting_date" value="{% if schedule.inside_planting_date %}{{ schedule.inside_planting_date|date:'m/d/Y' }}{% endif %}" 
+                                           placeholder="MM/DD/YYYY" autocomplete="off">
+                                    <div class="form-text">Format: MM/DD/YYYY</div>
+                                    <div class="invalid-feedback">Please enter a valid inside planting date.</div>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label for="outside_planting_date" class="form-label">Outside Planting Date</label>
-                                    <input type="date" class="form-control" id="outside_planting_date" 
-                                           name="outside_planting_date" value="{% if schedule.outside_planting_date %}{{ schedule.outside_planting_date|date:'Y-m-d' }}{% endif %}">
+                                    <input type="text" class="form-control datepicker" id="outside_planting_date" 
+                                           name="outside_planting_date" value="{% if schedule.outside_planting_date %}{{ schedule.outside_planting_date|date:'m/d/Y' }}{% endif %}" 
+                                           placeholder="MM/DD/YYYY" autocomplete="off">
+                                    <div class="form-text">Format: MM/DD/YYYY</div>
+                                    <div class="invalid-feedback">Please enter a valid outside planting date.</div>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label for="harvest_date" class="form-label">Expected Harvest Date</label>
-                                    <input type="date" class="form-control" id="harvest_date" 
-                                           name="harvest_date" value="{% if schedule.harvest_date %}{{ schedule.harvest_date|date:'Y-m-d' }}{% endif %}">
+                                    <input type="text" class="form-control datepicker" id="harvest_date" 
+                                           name="harvest_date" value="{% if schedule.harvest_date %}{{ schedule.harvest_date|date:'m/d/Y' }}{% endif %}" 
+                                           placeholder="MM/DD/YYYY" autocomplete="off">
+                                    <div class="form-text">Format: MM/DD/YYYY</div>
+                                    <div class="invalid-feedback">Please enter a valid harvest date.</div>
                                 </div>
                             </div>
                         </div>
@@ -167,6 +176,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }, false);
     });
 
+    // Initialize jQuery datepickers
+    $('.datepicker').datepicker({
+        format: 'mm/dd/yyyy',
+        autoclose: true,
+        todayHighlight: true,
+        clearBtn: true,
+        orientation: 'bottom'
+    });
+
     // Date handling
     const insideDateInput = document.getElementById('inside_planting_date');
     const outsideDateInput = document.getElementById('outside_planting_date');
@@ -178,22 +196,56 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!harvestDate || !varietyId || !varietiesData[varietyId]) return;
 
         const variety = varietiesData[varietyId];
-        const harvestDateObj = new Date(harvestDate);
+        const harvestDateObj = parseDate(harvestDate);
+        if (!harvestDateObj) return;
+        
         let outsideDateObj, insideDateObj;
 
         // Calculate outside planting date based on days to maturity
         if (variety.days_to_maturity) {
             outsideDateObj = new Date(harvestDateObj);
             outsideDateObj.setDate(harvestDateObj.getDate() - variety.days_to_maturity);
-            outsideDateInput.value = outsideDateObj.toISOString().split('T')[0];
+            outsideDateInput.value = formatDateToMMDDYYYY(outsideDateObj);
+            // Refresh the datepicker to show the new date
+            $(outsideDateInput).datepicker('update');
         }
 
         // For transplants, calculate inside planting date
         if (variety.planting_method === 'TRANSPLANT' && variety.days_from_seed_to_transplant && outsideDateObj) {
             insideDateObj = new Date(outsideDateObj);
             insideDateObj.setDate(outsideDateObj.getDate() - variety.days_from_seed_to_transplant);
-            insideDateInput.value = insideDateObj.toISOString().split('T')[0];
+            insideDateInput.value = formatDateToMMDDYYYY(insideDateObj);
+            // Refresh the datepicker to show the new date
+            $(insideDateInput).datepicker('update');
         }
+    }
+    
+    // Helper function to parse MM/DD/YYYY date string to Date object
+    function parseDate(dateString) {
+        if (!dateString) return null;
+        
+        // Handle MM/DD/YYYY format
+        const parts = dateString.split('/');
+        if (parts.length === 3) {
+            const month = parseInt(parts[0], 10) - 1; // Months are 0-indexed in JS
+            const day = parseInt(parts[1], 10);
+            const year = parseInt(parts[2], 10);
+            return new Date(year, month, day);
+        }
+        
+        // Fallback to standard date parsing
+        return new Date(dateString);
+    }
+    
+    // Helper function to format Date object to MM/DD/YYYY string
+    function formatDateToMMDDYYYY(date) {
+        if (!date || isNaN(date.getTime())) return '';
+        
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const year = date.getFullYear();
+        
+        return `${month}/${day}/${year}`;
     }
 
     // Update dates when harvest date changes
@@ -211,25 +263,43 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Ensure dates are in logical order
-    insideDateInput.addEventListener('change', function() {
+    // Ensure logical date order
+    $(insideDateInput).on('changeDate', function() {
         if (this.value) {
-            outsideDateInput.min = this.value;
-        }
-    });
-
-    outsideDateInput.addEventListener('change', function() {
-        if (this.value) {
-            if (insideDateInput.value) {
-                this.min = insideDateInput.value;
+            const insideDate = parseDate(this.value);
+            if (insideDate) {
+                // Set minimum date for outside planting
+                $(outsideDateInput).datepicker('setStartDate', insideDate);
             }
-            harvestDateInput.min = this.value;
         }
     });
 
-    harvestDateInput.addEventListener('change', function() {
-        if (this.value && outsideDateInput.value) {
-            this.min = outsideDateInput.value;
+    $(outsideDateInput).on('changeDate', function() {
+        if (this.value) {
+            const outsideDate = parseDate(this.value);
+            if (outsideDate) {
+                // Set minimum date for harvest date
+                $(harvestDateInput).datepicker('setStartDate', outsideDate);
+                
+                // Set maximum date for inside planting
+                $(insideDateInput).datepicker('setEndDate', outsideDate);
+            }
+        }
+    });
+
+    $(harvestDateInput).on('changeDate', function() {
+        if (this.value) {
+            const harvestDate = parseDate(this.value);
+            if (harvestDate) {
+                // Set maximum date for outside planting
+                $(outsideDateInput).datepicker('setEndDate', harvestDate);
+                
+                // Update planting dates based on harvest date
+                const varietyId = varietySelect.value;
+                if (varietyId) {
+                    calculatePlantingDates(this.value, varietyId);
+                }
+            }
         }
     });
 });

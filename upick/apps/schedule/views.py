@@ -312,7 +312,19 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
         if not form.instance.group:
             form.add_error(None, 'You must be a member of at least one group to create a planting schedule.')
             return self.form_invalid(form)
-            
+        
+        if not form.instance.harvest_date:
+            form.add_error(None, 'Harvest date is required.')
+            return self.form_invalid(form)
+
+        if not form.instance.outside_planting_date:
+            form.add_error(None, 'Outside planting date is required.')
+            return self.form_invalid(form)
+        
+        if not form.instance.inside_planting_date:
+            form.add_error(None, 'Inside planting date is required.')
+            return self.form_invalid(form)
+        
         messages.success(self.request, 'Planting schedule created successfully.')
         return super().form_valid(form)
     
@@ -322,6 +334,9 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        
+        # Get all garden beds for the user
+        garden_beds = GardenBed.objects.filter(group__in=self.request.user.groups.all())
         
         # Get selected year from query parameters or use current year
         selected_year = self.request.GET.get('year')
@@ -336,7 +351,7 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
         # Get varieties for JavaScript data
         varieties = Variety.objects.filter(
             Q(variety_plant__group__in=self.request.user.groups.all()) | Q(variety_plant__group=None)
-        ).select_related('variety_plant')
+        ).select_related('variety_plant').order_by('variety_plant__name', 'id')
         
         # Get garden plans for JavaScript data
         garden_plans = GardenPlan.objects.filter(
@@ -378,6 +393,7 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
             varieties_data[variety.id] = variety_data
         
         context.update({
+            'garden_beds': garden_beds,
             'varieties': varieties,
             'garden_plans': garden_plans,
             'garden_plans_json': garden_plans_json,
@@ -459,7 +475,19 @@ class ScheduleUpdateView(LoginRequiredMixin, UpdateView):
             form.instance.notes = self.request.POST.get('notes')
             form.instance.location_notes = self.request.POST.get('location_notes')
             form.instance.status = self.request.POST.get('status')
+
+            if not form.instance.harvest_date:
+                form.add_error('harvest_date', 'Harvest date is required.')
+                return self.form_invalid(form)
+
+            if not form.instance.outside_planting_date:
+                form.add_error('outside_planting_date', 'Outside planting date is required.')
+                return self.form_invalid(form)
             
+            if not form.instance.inside_planting_date:
+                form.add_error('inside_planting_date', 'Inside planting date is required.')
+                return self.form_invalid(form)
+
             messages.success(self.request, 'Schedule updated successfully.')
             return super().form_valid(form)
         except Exception as e:
@@ -534,7 +562,16 @@ def update_planting_date(request, schedule_id):
     try:
         schedule = get_object_or_404(PlantingSchedule, id=schedule_id)
         date_str = request.POST.get('planting_date')
-        planting_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        
+        # Try to parse the date in mm/dd/yyyy format first
+        try:
+            planting_date = datetime.strptime(date_str, '%m/%d/%Y').date()
+        except ValueError:
+            # Fallback to YYYY-MM-DD format
+            try:
+                planting_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            except ValueError:
+                return JsonResponse({'error': 'Invalid date format. Please use MM/DD/YYYY format.'}, status=400)
         
         # Update the schedule's outside planting date
         schedule.outside_planting_date = planting_date
