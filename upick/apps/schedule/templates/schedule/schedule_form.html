@@ -117,6 +117,33 @@
                         </div>
                         {% endif %}
 
+                        <div class="row" id="variety-info-row">
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="days_to_germinate" class="form-label">Days to Germinate</label>
+                                    <div id="days-to-germinate">{% if schedule and schedule.variety %}{{ schedule.variety.variety_days_to_germinate|default:"--" }}{% else %}--{% endif %}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="days_from_seed_to_transplant" class="form-label">Days Seed to Transplant</label>
+                                    <div id="days-from-seed-to-transplant">{% if schedule and schedule.variety %}{{ schedule.variety.variety_days_from_seed_to_transplant|default:"--" }}{% else %}--{% endif %}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="days_to_maturity" class="form-label">Days to Maturity</label>
+                                    <div id="days-to-maturity">{% if schedule and schedule.variety %}{{ schedule.variety.variety_days_to_maturity|default:"--" }}{% else %}--{% endif %}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="days_from_frost_to_transplant" class="form-label">Days Frost to Transplant</label>
+                                    <div id="days-from-frost-to-transplant">{% if schedule and schedule.variety %}{{ schedule.variety.variety_days_from_frost_to_transplant|default:"--" }}{% else %}--{% endif %}</div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="mb-3">
@@ -278,7 +305,43 @@ document.addEventListener('DOMContentLoaded', function() {
         if (harvestDateInput.value) {
             calculatePlantingDates(harvestDateInput.value, this.value);
         }
+        
+        // Update variety information display
+        updateVarietyInfo(this.value);
     });
+    
+    // Function to update variety information display
+    function updateVarietyInfo(varietyId) {
+        if (!varietyId) {
+            document.getElementById('days-to-germinate').textContent = '--';
+            document.getElementById('days-to-maturity').textContent = '--';
+            document.getElementById('days-from-seed-to-transplant').textContent = '--';
+            document.getElementById('days-from-frost-to-transplant').textContent = '--';
+            return;
+        }
+        
+        // Find the variety in the varieties list
+        const variety = allVarieties.find(v => v.id == varietyId);
+        if (!variety) return;
+        
+        // Get variety data from the varieties_data dictionary
+        const varietyData = varietiesData[varietyId] || {};
+        
+        // Update the display fields
+        document.getElementById('days-to-germinate').textContent = 
+            varietyData.days_to_germinate || '--';
+        document.getElementById('days-to-maturity').textContent = 
+            varietyData.days_to_maturity || '--';
+        document.getElementById('days-from-seed-to-transplant').textContent = 
+            varietyData.days_from_seed_to_transplant || '--';
+        document.getElementById('days-from-frost-to-transplant').textContent = 
+            varietyData.days_from_frost_to_transplant || '--';
+    }
+    
+    // Initialize variety info if a variety is already selected
+    if (varietySelect.value) {
+        updateVarietyInfo(varietySelect.value);
+    }
 
     // Ensure logical date order
     $(insideDateInput).on('changeDate', function() {

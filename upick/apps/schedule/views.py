@@ -362,8 +362,10 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
         varieties_data = {}
         for variety in varieties:
             variety_data = {
+                'days_to_germinate': None,
                 'days_to_maturity': variety.variety_days_to_maturity,
                 'days_from_seed_to_transplant': variety.variety_days_from_seed_to_transplant,
+                'days_from_frost_to_transplant': variety.variety_days_from_frost_to_transplant,
                 'planting_method': variety.variety_planting_method,
             }
             
@@ -502,8 +504,10 @@ class ScheduleUpdateView(LoginRequiredMixin, UpdateView):
         varieties_data = {}
         for variety in varieties:
             variety_data = {
+                'days_to_germinate': None,
                 'days_to_maturity': variety.variety_days_to_maturity,
                 'days_from_seed_to_transplant': variety.variety_days_from_seed_to_transplant,
+                'days_from_frost_to_transplant': variety.variety_days_from_frost_to_transplant,
                 'planting_method': variety.variety_planting_method,
             }
             
