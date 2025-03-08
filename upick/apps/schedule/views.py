@@ -19,8 +19,8 @@ from django.contrib.auth.models import Group
 from .models import PlantingSchedule, GardenBed, TodoTask, TodoList
 from .forms import TodoTaskForm, TodoListForm
 from apps.plants.models import Plant, Variety
-from apps.planning.models import GardenPlan
 from .forms import PlantingScheduleForm
+from apps.produceplanner.models import ProducePlanOverview
 from apps.planning.models import GardenConfiguration
 import json
 
@@ -197,8 +197,8 @@ class GardenBedDetailView(LoginRequiredMixin, DetailView):
         context['page_name'] = 'garden_bed'
         context['page_action'] = 'detail'
         context['planting_schedules'] = garden_bed.plantingschedule_set.all()\
-            .select_related('variety', 'garden_plan')\
-            .order_by('-garden_plan__year', 'variety__variety_name')
+            .select_related('variety', 'produce_plan')\
+            .order_by('-produce_plan__year', 'variety__variety_name')
         return context
 
 
@@ -227,8 +227,8 @@ class GardenBedDeleteView(LoginRequiredMixin, DeleteView):
 def schedule_list(request):
     """Display list of planting schedules grouped by garden bed."""
     # Get available years from garden plans
-    garden_plans = GardenPlan.objects.filter(group__in=request.user.groups.all()).order_by('year')
-    available_years = garden_plans.values_list('year', flat=True).distinct()
+    produce_plans = ProducePlanOverview.objects.filter(group__in=request.user.groups.all()).order_by('year')
+    available_years = produce_plans.values_list('year', flat=True).distinct()
     
     # Get selected year (default to latest year)
     selected_year = request.GET.get('year')
@@ -241,7 +241,7 @@ def schedule_list(request):
     garden_beds = GardenBed.objects.filter(group__in=request.user.groups.all(), year=selected_year)
     schedules = PlantingSchedule.objects.filter(
         garden_bed__group__in=request.user.groups.all(),
-        garden_plan__year=selected_year
+        produce_plan__year=selected_year
     ) if selected_year else PlantingSchedule.objects.none()
     
     # Filter by status if provided
@@ -350,6 +350,31 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
             form.add_error(None, 'You must be a member of at least one group to create a planting schedule.')
             return self.form_invalid(form)
         
+        instance = form.save(commit=False)
+        instance.group = get_user_group(self.request)
+        instance.schedule_status = self.request.POST.get('status')
+        instance.schedule_notes = self.request.POST.get('notes')
+        instance.schedule_location_notes = self.request.POST.get('location_notes')
+        harvest_date_str = self.request.POST.get('harvest_date')
+        if harvest_date_str:
+            harvest_date = datetime.strptime(harvest_date_str, '%m/%d/%Y').strftime('%Y-%m-%d')
+            instance.expected_harvest_date = harvest_date
+        inside_planting_date_str = self.request.POST.get('inside_planting_date')
+        if inside_planting_date_str:
+            inside_planting_date = datetime.strptime(inside_planting_date_str, '%m/%d/%Y').strftime('%Y-%m-%d')
+            instance.inside_planting_date = inside_planting_date
+        outside_planting_date_str = self.request.POST.get('outside_planting_date')
+        if outside_planting_date_str:
+            outside_planting_date = datetime.strptime(outside_planting_date_str, '%m/%d/%Y').strftime('%Y-%m-%d')
+            instance.outside_planting_date = outside_planting_date
+        variety = Variety.objects.get(id=self.request.POST.get('variety'))
+        instance.variety = variety
+        garden_bed = GardenBed.objects.get(id=self.request.POST.get('garden_bed'))
+        instance.garden_bed = garden_bed
+        produce_planObj = ProducePlanOverview.objects.get(id=self.request.POST.get('produce_plan'))
+        instance.produce_plan = produce_planObj
+        instance.save() 
+
         messages.success(self.request, 'Planting schedule created successfully.')
         return super().form_valid(form)
     
@@ -381,14 +406,14 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
             Q(variety_plant__group__in=self.request.user.groups.all()) | Q(variety_plant__group=None)
         ).select_related('variety_plant').order_by('variety_plant__name', 'id')
         
-        # Get garden plans for JavaScript data
-        garden_plans = GardenPlan.objects.filter(
+        # Get produce plans for JavaScript data
+        produce_plans = ProducePlanOverview.objects.filter(
             group__in=self.request.user.groups.all(), 
             year=selected_year
         ).order_by('-year', 'name')
         
         # Prepare JSON data for JavaScript
-        garden_plans_json = [{'id': plan.id, 'year': plan.year, 'name': plan.name} for plan in garden_plans]
+        produce_plans_json = [{'id': plan.id, 'year': plan.year, 'name': plan.name} for plan in produce_plans]
         varieties_json = [
             {
                 'id': variety.id, 
@@ -429,15 +454,19 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
                     variety_data['planting_method'] = variety.variety_plant.planting_method
                     
             varieties_data[variety.id] = variety_data
+
+        # Convert varieties_data to JSON for JavaScript using the custom encoder and helper function
+        varieties_data_json = safe_json_dumps(varieties_data)
         
         context.update({
             'spring_frost_date': garden_config.spring_frost_date,
             'fall_frost_date': garden_config.fall_frost_date,
             'garden_beds': garden_beds,
             'varieties': varieties,
-            'garden_plans': garden_plans,
-            'garden_plans_json': garden_plans_json,
+            'produce_plans': produce_plans,
+            'produce_plans_json': produce_plans_json,
             'varieties_json': varieties_json,
+            'varieties_data_json': varieties_data_json,
             'varieties_data': varieties_data,
             'page_app': 'schedule',
             'page_name': 'schedule',
@@ -455,7 +484,7 @@ def schedule_duplicate(request, schedule_id):
     new_schedule = PlantingSchedule.objects.create(
         garden_bed=original_schedule.garden_bed,
         variety=original_schedule.variety,
-        garden_plan=original_schedule.garden_plan,
+        produce_plan=original_schedule.produce_plan,
         group=original_schedule.group,
         seed_inventory=original_schedule.seed_inventory,
         inside_planting_date=original_schedule.inside_planting_date,
@@ -491,10 +520,10 @@ class ScheduleUpdateView(LoginRequiredMixin, UpdateView):
         kwargs = super().get_form_kwargs()
         kwargs['request'] = self.request
         
-        # Get the year from the garden plan or current year
+        # Get the year from the produce plan or current year
         schedule = self.get_object()
-        if schedule.garden_plan:
-            selected_year = schedule.garden_plan.year
+        if schedule.produce_plan:
+            selected_year = schedule.produce_plan.year
         elif schedule.garden_bed and schedule.garden_bed.year:
             selected_year = schedule.garden_bed.year
         else:
@@ -510,12 +539,31 @@ class ScheduleUpdateView(LoginRequiredMixin, UpdateView):
     def form_valid(self, form):
         """Process the form data and save the schedule."""
         try:
-            # Additional fields not in the form
-            form.instance.notes = self.request.POST.get('notes')
-            form.instance.location_notes = self.request.POST.get('location_notes')
-            form.instance.status = self.request.POST.get('status')
-
-            # Date validation is now handled by the form field required=True setting
+            instance = form.save(commit=False)
+            instance.group = get_user_group(self.request)
+            instance.schedule_status = self.request.POST.get('status')
+            instance.schedule_notes = self.request.POST.get('notes')
+            instance.schedule_location_notes = self.request.POST.get('location_notes')
+            instance.produce_plan = self.request.POST.get('produce_plan')
+            harvest_date_str = self.request.POST.get('harvest_date')
+            if harvest_date_str:
+                harvest_date = datetime.strptime(harvest_date_str, '%m/%d/%Y').strftime('%Y-%m-%d')
+                instance.expected_harvest_date = harvest_date
+            inside_planting_date_str = self.request.POST.get('inside_planting_date')
+            if inside_planting_date_str:
+                inside_planting_date = datetime.strptime(inside_planting_date_str, '%m/%d/%Y').strftime('%Y-%m-%d')
+                instance.inside_planting_date = inside_planting_date
+            outside_planting_date_str = self.request.POST.get('outside_planting_date')
+            if outside_planting_date_str:
+                outside_planting_date = datetime.strptime(outside_planting_date_str, '%m/%d/%Y').strftime('%Y-%m-%d')
+                instance.outside_planting_date = outside_planting_date
+            variety = Variety.objects.get(id=self.request.POST.get('variety'))
+            instance.variety = variety
+            garden_bed = GardenBed.objects.get(id=self.request.POST.get('garden_bed'))
+            instance.garden_bed = garden_bed
+            produce_plan = ProducePlanOverview.objects.get(id=self.request.POST.get('produce_plan'))
+            instance.produce_plan = produce_plan
+            instance.save()
 
             messages.success(self.request, 'Schedule updated successfully.')
             return super().form_valid(form)
@@ -530,8 +578,8 @@ class ScheduleUpdateView(LoginRequiredMixin, UpdateView):
         # Get all garden beds for the user
         garden_beds = GardenBed.objects.filter(group__in=self.request.user.groups.all())
         
-        # Get all garden plans for the user
-        garden_plans = GardenPlan.objects.filter(group__in=self.request.user.groups.all()).order_by('year')
+        # Get all produce plans for the user
+        produce_plans = ProducePlanOverview.objects.filter(group__in=self.request.user.groups.all()).order_by('year')
 
         garden_config = GardenConfiguration.get_settings()
         
@@ -541,13 +589,13 @@ class ScheduleUpdateView(LoginRequiredMixin, UpdateView):
         ).select_related('variety_plant').order_by('variety_plant__name', 'id')
         
         # Prepare JSON data for JavaScript
-        garden_plans_json = json.dumps([
+        produce_plans_json = json.dumps([
             {
                 'id': plan.id,
                 'year': plan.year,
                 'name': plan.name
             } 
-            for plan in garden_plans
+            for plan in produce_plans
         ], ensure_ascii=False)
 
         varieties_json = json.dumps([
@@ -598,9 +646,9 @@ class ScheduleUpdateView(LoginRequiredMixin, UpdateView):
         
         context.update({
             'garden_beds': garden_beds,
-            'garden_plans': garden_plans,
+            'produce_plans': produce_plans,
             'varieties': varieties,
-            'garden_plans_json': garden_plans_json,
+            'produce_plans_json': produce_plans_json,
             'varieties_json': varieties_json,
             'varieties_data_json': varieties_data_json,
             'status_choices': PlantingSchedule._meta.get_field('status').choices,

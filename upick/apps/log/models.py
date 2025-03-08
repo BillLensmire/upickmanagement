@@ -3,10 +3,11 @@ from django.utils import timezone
 from django.contrib.auth.models import Group
 from apps.plants.models import Plant
 from apps.beneficials.models import Beneficial
-from apps.planning.models import GardenPlan, SeedSource
+from apps.planning.models import SeedSource
 from apps.foliarrecipes.models import FoliarRecipe
 from apps.schedule.models import GardenBed
 from datetime import date
+from apps.produceplanner.models import ProducePlanOverview
 
 class LogEntry(models.Model):
     ENTRY_TYPE_CHOICES = [
@@ -86,7 +87,7 @@ class LogEntry(models.Model):
         help_text='Related plants'
     )
     plant_schedule = models.ForeignKey(
-        GardenPlan,
+        ProducePlanOverview,
         on_delete=models.SET_NULL,
         blank=True,
         null=True,

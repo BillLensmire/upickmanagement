@@ -11,7 +11,7 @@
         </div>
         <div class="col-md-4 text-end">
             <a href="{% url 'produceplanner:overview_create' %}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Create Plan
+                <i class="fas fa-plus"></i> Create Produce Plan
             </a>
         </div>
     </div>
@@ -20,7 +20,7 @@
         <table class="table table-hover">
             <thead>
                 <tr>
-                    <th>Garden Plan</th>
+                    <th>Produce Plan</th>
                     <th>Year</th>
                     <th>Start Date</th>
                     <th>End Date</th>
@@ -31,9 +31,9 @@
                 {% for overview in overviews %}
                 <tr class="clickable-row" data-href="{% url 'produceplanner:overview_detail' overview.pk %}">
                     <td>
-                        <a href="{% url 'planning:garden_plan_detail' overview.garden_plan.id %}" class="text-decoration-none">{{ overview.garden_plan.name }}</a>
+                        <a href="{% url 'produceplanner:overview_detail' overview.pk %}" class="text-decoration-none">{{ overview.name }}</a>
                     </td>
-                    <td>{{ overview.garden_plan.year }}</td>
+                    <td>{{ overview.year }}</td>
                     <td>{{ overview.overall_start_date|date:"M j, Y" }}</td>
                     <td>{{ overview.overall_end_date|date:"M j, Y" }}</td>
                     <td>

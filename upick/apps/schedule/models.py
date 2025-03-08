@@ -2,9 +2,10 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.utils import timezone
-from apps.plants.models import Plant, Variety
-from apps.planning.models import GardenPlan, SeedInventory
+from apps.plants.models import Variety
+from apps.planning.models import SeedInventory
 from datetime import timedelta
+from apps.produceplanner.models import ProducePlanOverview
 
 # Create your models here.
 
@@ -43,12 +44,12 @@ class PlantingSchedule(models.Model):
         blank=True,
         help_text='The group this planting schedule belongs to'
     )
-    garden_plan = models.ForeignKey(
-        GardenPlan,
+    produce_plan = models.ForeignKey(
+        ProducePlanOverview,
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        help_text='The garden plan this planting schedule belongs to'
+        help_text='The produce plan this planting schedule belongs to'
     )
     seed_inventory = models.ForeignKey(SeedInventory, on_delete=models.SET_NULL, null=True, blank=True)
     inside_planting_date = models.DateField(null=True, blank=True, help_text="Date when the seed will be planted inside.")

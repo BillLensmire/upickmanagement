@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from apps.produceplanner.views import get_varieties
 
 app_name = 'plants'
 
@@ -20,4 +21,5 @@ urlpatterns = [
     path('varieties/<int:pk>/edit/', views.VarietyUpdateView.as_view(), name='variety_edit'),
     path('varieties/search/', views.VarietySearchView.as_view(), name='variety_search'),
     path('varieties/<int:pk>/delete/', views.VarietyDeleteView.as_view(), name='variety_delete'),
+    path('get-varieties/<int:pk>/', get_varieties, name='get_varieties'),
 ]

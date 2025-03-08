@@ -2,7 +2,6 @@ from django.contrib import admin
 
 from .models import (
     GardenConfiguration,
-    GardenPlan,
     SeedSource,
     SeedInventory,
     CropRotationRule,
@@ -64,13 +63,6 @@ class SeedInventoryAdmin(admin.ModelAdmin):
             'fields': ('seeds_remaining', 'notes')
         })
     )
-
-@admin.register(GardenPlan)
-class GardenPlanAdmin(admin.ModelAdmin):
-    list_display = ('name', 'group', 'year')
-    list_filter = ('year', 'group')
-    search_fields = ('name', 'description')
-    readonly_fields = ('created_at', 'updated_at')
 
 @admin.register(CropRotationRule)
 class CropRotationRuleAdmin(admin.ModelAdmin):

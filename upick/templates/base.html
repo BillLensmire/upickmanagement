@@ -127,17 +127,10 @@
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="planningDropdown">
                             <li><a class="dropdown-item" href="{% url 'plants:list' %}"><i class="fas fa-leaf me-2"></i>Plants</a></li>
+                            <li><a class="dropdown-item" href="{% url 'schedule:garden_bed_list' %}"><i class="fas fa-th me-2"></i>Garden Beds</a></li>
+                            <li><a class="dropdown-item" href="{% url 'schedule:list' %}"><i class="fas fa-calendar-alt me-2"></i>Plants Per Bed</a></li>
                             <li><a class="dropdown-item" href="{% url 'produceplanner:overview_list' %}"><i class="fas fa-carrot me-2"></i>Produce Plans</a></li>
                             <li><a class="dropdown-item" href="{% url 'schedule:calendar' %}"><i class="fas fa-calendar me-2"></i>Calendar</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="bedsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-border-all me-1"></i>Beds
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="bedsDropdown">
-                            <li><a class="dropdown-item" href="{% url 'schedule:garden_bed_list' %}"><i class="fas fa-th me-2"></i>Garden Beds</a></li>
-                            <li><a class="dropdown-item" href="{% url 'schedule:list' %}"><i class="fas fa-calendar-alt me-2"></i>Planting Schedule</a></li>
                         </ul>
                     </li>
                     <li class="nav-item dropdown">

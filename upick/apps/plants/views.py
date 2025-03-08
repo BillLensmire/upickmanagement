@@ -100,7 +100,6 @@ class PlantCreateView(LoginRequiredMixin, CreateView):
         'height_inches', 'is_perennial',
         'companion_plants', 'research_notes'
     ]
-    success_url = reverse_lazy('plants:list')
 
     def form_valid(self, form):
         instance = form.save(commit=False)
@@ -111,6 +110,9 @@ class PlantCreateView(LoginRequiredMixin, CreateView):
         instance.save()
         messages.success(self.request, 'Plant created successfully!')
         return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('plants:detail', kwargs={'pk': self.object.pk})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -241,8 +243,13 @@ class VarietyCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         group = get_user_group(self.request)
         if not group:
+            messages.error(self.request, 'You must be a member of at least one group to create a variety.')
             return redirect('plants:variety_list')
-        
+        instance = form.save(commit=False)
+        instance.group = group
+        instance.plant = self.get_object().variety_plant
+        instance.save()
+        messages.success(self.request, 'Variety created successfully!')
         return super().form_valid(form)
 
 class VarietyUpdateView(LoginRequiredMixin, UpdateView):
@@ -261,8 +268,12 @@ class VarietyUpdateView(LoginRequiredMixin, UpdateView):
     def form_valid(self, form):
         group = get_user_group(self.request)
         if not group:
+            messages.error(self.request, 'You must be a member of at least one group to update a variety.')
             return redirect('plants:variety_list')
-        
+        instance = form.save(commit=False)
+        instance.group = group
+        instance.plant = self.get_object().variety_plant
+        instance.save()
         messages.success(self.request, f'Variety "{form.instance.variety_name}" updated successfully.')
         return super().form_valid(form)
 
@@ -310,7 +321,14 @@ class PlantVarietyCreateView(LoginRequiredMixin, CreateView):
         return form
     
     def form_valid(self, form):
-        form.instance.variety_plant = get_object_or_404(Plant, pk=self.kwargs['plant_pk'])
+        group = get_user_group(self.request)
+        if not group:
+            messages.error(self.request, 'You must be a member of at least one group to create a variety.')
+            return redirect('plants:variety_list')
+        instance = form.save(commit=False)
+        instance.group = group
+        instance.variety_plant = get_object_or_404(Plant, pk=self.kwargs['plant_pk'])
+        instance.save()
         messages.success(self.request, 'Variety added successfully!')
         return super().form_valid(form)
     

@@ -94,10 +94,10 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="plant_schedule" class="form-label">Plant Schedule</label>
+                    <label for="plant_schedule" class="form-label">Garden Plan Schedule</label>
                     <select class="form-select" id="plant_schedule" name="plant_schedule">
-                        <option value="">Select a plant schedule...</option>
-                        {% for schedule in garden_plans %}
+                        <option value="">Select a garden plan schedule...</option>
+                        {% for schedule in produce_plans %}
                         <option value="{{ schedule.id }}" {% if log_entry.plant_schedule_id == schedule.id %}selected{% endif %}>{{ schedule.name }}</option>
                         {% endfor %}
                     </select>

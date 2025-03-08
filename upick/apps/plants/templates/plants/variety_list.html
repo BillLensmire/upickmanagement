@@ -7,11 +7,6 @@
     <div class="col-md-8">
         <h1>Plant Varieties</h1>
     </div>
-    <div class="col-md-4 text-end">
-        <a href="{% url 'plants:variety_create' %}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Add Variety
-        </a>
-    </div>
     <form method="get" action="{% url 'plants:variety_search' %}" class="mb-4" id="varietySearchForm">
         <div class="row g-3">
             <div class="col-md-6">

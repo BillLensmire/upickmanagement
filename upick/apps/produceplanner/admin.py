@@ -8,9 +8,9 @@ from apps.planning.models import GardenConfiguration
 
 @admin.register(ProducePlan)
 class ProducePlanAdmin(admin.ModelAdmin):
-    list_display = ('plant', 'produce_plan_overview', 'start_date', 'end_date')
+    list_display = ('plant', 'produce_plan_overview', 'variety', 'group')
     list_filter = ('produce_plan_overview', 'plant')
-    search_fields = ('plant__name', 'garden_plan__name')
+    search_fields = ('plant__name', 'produce_plan_overview__name')
     actions = ['duplicate_and_edit']
 
     def duplicate_and_edit(self, request, queryset):
@@ -20,8 +20,8 @@ class ProducePlanAdmin(admin.ModelAdmin):
             new_plan = ProducePlan.objects.create(
                 plant=plan.plant,
                 produce_plan_overview=plan.produce_plan_overview,
-                start_date=plan.start_date,
-                end_date=plan.end_date
+                group=plan.group,
+                variety=plan.variety
             )
             new_plans.append(new_plan)
 
@@ -44,9 +44,9 @@ class ProducePlanAdmin(admin.ModelAdmin):
 
 @admin.register(ProducePlanOverview)
 class ProducePlanOverviewAdmin(admin.ModelAdmin):
-    list_display = ('garden_plan', 'overall_start_date', 'overall_end_date', 'report_link')
-    list_filter = ('garden_plan',)
-    search_fields = ('garden_plan__name',)
+    list_display = ('name', 'overall_start_date', 'overall_end_date', 'report_link')
+    list_filter = ('group',)
+    search_fields = ('name',)
 
     def report_link(self, obj):
         url = reverse('produceplanner:produce_availability_report', args=[obj.id])

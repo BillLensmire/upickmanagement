@@ -130,23 +130,6 @@ class GardenConfiguration(models.Model):
         verbose_name = "Garden Configuration"
         verbose_name_plural = "Garden Configuration"
 
-class GardenPlan(models.Model):
-    name = models.CharField(max_length=100)
-    group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True, help_text='The group this garden plan belongs to')
-    year = models.IntegerField()
-    start_date = models.DateField(null=True, blank=True, help_text="When to start implementing this plan")
-    end_date = models.DateField(null=True, blank=True, help_text="When this plan should be completed")
-    description = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.name} ({self.year})"
-
-    class Meta:
-        ordering = ['year', 'name']
-        unique_together = ['group', 'name', 'year']
-
 class CropRotationRule(models.Model):
     plant_family = models.CharField(max_length=100)
     years_before_repeat = models.IntegerField(default=3)

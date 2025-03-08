@@ -5,7 +5,7 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['page_app'] = 'garden_planner'
+        context['page_app'] = 'produce_planner'
         context['page_name'] = 'home'
         context['page_action'] = 'view'
         return context

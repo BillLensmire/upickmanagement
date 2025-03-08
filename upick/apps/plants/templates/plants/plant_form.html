@@ -72,7 +72,11 @@
                             <button type="submit" class="btn btn-primary">
                                 {% if form.instance.pk %}Update{% else %}Create{% endif %} Plant
                             </button>
+                            {% if form.instance.pk %}
                             <a href="{% url 'plants:detail' pk=form.instance.pk %}" class="btn btn-secondary">Cancel</a>
+                            {% else %}
+                            <a href="{% url 'plants:list' %}" class="btn btn-secondary">Cancel</a>
+                            {% endif %}
                         </div>
                     </form>
                 </div>

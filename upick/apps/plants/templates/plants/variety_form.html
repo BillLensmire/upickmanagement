@@ -87,7 +87,11 @@
                             {% if form.instance.pk %}
                             <a href="{% url 'plants:variety_list' %}" class="btn btn-secondary">Cancel</a>
                             {% else %}
+                            {% if plant %}
                             <a href="{% url 'plants:detail' pk=plant.pk %}" class="btn btn-secondary">Cancel</a>
+                            {% else %}
+                            <a href="{% url 'plants:variety_list' %}" class="btn btn-secondary">Cancel</a>
+                            {% endif %}
                             {% endif %}
                         </div>
                     </form>

@@ -3,15 +3,15 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView, CreateView, UpdateView, DetailView
+from django.views.generic import ListView, CreateView, UpdateView, DetailView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.contrib.auth.models import Group
 from datetime import timedelta, datetime
 from .models import ProducePlanOverview, ProducePlan, Plant
 from apps.plants.models import Plant, Variety
-from apps.planning.models import GardenConfiguration, GardenPlan
-from .forms import ProducePlanOverviewForm
+from apps.planning.models import GardenConfiguration
+from .forms import ProducePlanOverviewForm, ProducePlanForm
 
 def get_user_group(request):
     """Get the user's active group or return None if user has no groups.
@@ -24,7 +24,7 @@ def get_user_group(request):
 
 @login_required
 def produce_availability_report(request, overview_id):
-    overview = get_object_or_404(ProducePlanOverview, id=overview_id, garden_plan__group__in=request.user.groups.all())
+    overview = get_object_or_404(ProducePlanOverview, id=overview_id, group__in=request.user.groups.all())
     # Get only plants that have entries in this produce plan overview
     plants_with_produce_plans = Plant.objects.filter(produceplan__produce_plan_overview=overview).distinct()
     produce_plans = ProducePlan.objects.filter(produce_plan_overview=overview)
@@ -79,9 +79,7 @@ def produce_availability_report(request, overview_id):
             for week in date_ranges:
                 is_available = produce_plans.filter(
                     plant=plant,
-                    variety__isnull=True,  # Only include plans without a variety
-                    start_date__lte=week['date'] + timedelta(days=6),
-                    end_date__gte=week['date']
+                    variety__isnull=True
                 ).exists()
                 row['availability'].append(is_available)
 
@@ -111,8 +109,8 @@ def produce_availability_report(request, overview_id):
                     is_available = produce_plans.filter(
                         plant=plant,
                         variety=variety,
-                        start_date__lte=week['date'] + timedelta(days=6),
-                        end_date__gte=week['date']
+                        produce_plan_overview__overall_start_date__lte=week['date'] + timedelta(days=6),
+                        produce_plan_overview__overall_end_date__gte=week['date']
                     ).exists()
                     row['availability'].append(is_available)
 
@@ -150,13 +148,20 @@ def update_planting_date(request, plan_id):
             'message': str(e)
         }, status=400)
 
+def get_varieties(request, pk):
+    varieties = Variety.objects.filter(variety_plant=pk).order_by('variety_name')
+    print("varieties", varieties)
+    jresp = JsonResponse({'varieties': list(varieties.values('id', 'variety_name'))})
+    print("jresp", jresp.content)
+    return jresp
+
 class ProducePlanOverviewListView(LoginRequiredMixin, ListView):
     model = ProducePlanOverview
     template_name = 'produceplanner/overview_list.html'
     context_object_name = 'overviews'
 
     def get_queryset(self):
-        return super().get_queryset().filter(garden_plan__group__in=self.request.user.groups.all())
+        return super().get_queryset().filter(group__in=self.request.user.groups.all())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -173,9 +178,6 @@ class ProducePlanOverviewCreateView(LoginRequiredMixin, CreateView):
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
-        # Only show garden plans that don't already have a produce plan overview and belong to the user
-        existing_plans = ProducePlanOverview.objects.values_list('garden_plan_id', flat=True)
-        form.fields['garden_plan'].queryset = GardenPlan.objects.filter(group__in=self.request.user.groups.all()).exclude(id__in=existing_plans)
         return form
 
     def form_valid(self, form):
@@ -183,7 +185,9 @@ class ProducePlanOverviewCreateView(LoginRequiredMixin, CreateView):
         if not group:
             form.add_error(None, 'You must be a member of at least one group to create a produce plan overview.')
             return self.form_invalid(form)
-        form.instance.group = group
+        instance = form.save(commit=False)
+        instance.group = group
+        instance.save()
         messages.success(self.request, 'Produce plan overview created successfully.')
         return super().form_valid(form)
 
@@ -201,7 +205,7 @@ class ProducePlanOverviewUpdateView(LoginRequiredMixin, UpdateView):
     success_url = reverse_lazy('produceplanner:overview_list')
 
     def get_queryset(self):
-        return super().get_queryset().filter(garden_plan__group__in=self.request.user.groups.all())
+        return super().get_queryset().filter(group__in=self.request.user.groups.all())
 
     def form_valid(self, form):
         messages.success(self.request, 'Produce plan overview updated successfully.')
@@ -220,63 +224,119 @@ class ProducePlanOverviewDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'overview'
 
     def get_queryset(self):
-        return super().get_queryset().filter(garden_plan__group__in=self.request.user.groups.all())
+        return super().get_queryset().filter(group__in=self.request.user.groups.all())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['produce_plans'] = self.object.produce_plans.all().select_related('plant')
-        context['available_plants'] = Plant.objects.exclude(
-            id__in=self.object.produce_plans.values_list('plant_id', flat=True)
-        )
+        context['available_plants'] = Plant.objects.all().filter(group__in=self.request.user.groups.all())
+        context['available_varieties'] = Variety.objects.all().filter(group__in=self.request.user.groups.all())
         context['page_app'] = 'produceplanner'
         context['page_name'] = 'overview'
         context['page_action'] = 'detail'
         return context
 
-@login_required
-@require_POST
-def add_produce(request, overview_id):
-    overview = get_object_or_404(ProducePlanOverview, id=overview_id)
-    try:
-        plant = get_object_or_404(Plant, id=request.POST.get('plant'))
-        start_date = datetime.strptime(request.POST.get('start_date'), '%Y-%m-%d').date()
-        end_date = datetime.strptime(request.POST.get('end_date'), '%Y-%m-%d').date()
+class ProducePlanCreateView(LoginRequiredMixin, CreateView):
+    model = ProducePlan
+    form_class = ProducePlanForm
+    template_name = 'produceplanner/produceplan_form.html'
+    
+    def get_success_url(self):
+        return reverse_lazy('produceplanner:overview_detail', kwargs={'pk': self.kwargs['overview_id']})
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        return kwargs
+    
+    def get_initial(self):
+        initial = super().get_initial()
+        overview = get_object_or_404(ProducePlanOverview, id=self.kwargs['overview_id'])
+        initial['produce_plan_overview'] = overview.id
+        return initial
+    
+    def form_valid(self, form):
+        group = get_user_group(self.request)
+        if not group:
+            form.add_error(None, 'You must be a member of at least one group to create a produce plan.')
+            return self.form_invalid(form)
         
-        # Get variety if provided
-        variety_id = request.POST.get('variety')
-        variety = None
-        if variety_id and variety_id != 'null' and variety_id != '':
-            variety = get_object_or_404(Variety, id=variety_id)
-
-        if start_date > end_date:
-            raise ValueError('Start date must be before end date')
-
-        if start_date < overview.overall_start_date or end_date > overview.overall_end_date:
-            raise ValueError('Dates must be within the overall plan dates')
-
-        ProducePlan.objects.create(
-            plant=plant,
-            variety=variety,
-            produce_plan_overview=overview,
-            start_date=start_date,
-            end_date=end_date
-        )
-
-        plant_name = plant.name
-        if variety:
-            plant_name = f"{plant.name} ({variety.variety_name})"
+        overview = get_object_or_404(ProducePlanOverview, id=self.kwargs['overview_id'])
+        instance = form.save(commit=False)
+        instance.group = group
+        instance.produce_plan_overview = overview
+        instance.save()
         
-        messages.success(request, f'Added {plant_name} to the produce plan')
-    except Exception as e:
-        messages.error(request, str(e))
+        plant_name = instance.plant.name
+        if instance.variety:
+            plant_name = f"{instance.plant.name} ({instance.variety.variety_name})"
+        
+        messages.success(self.request, f'Added {plant_name} to the produce plan')
+        return super().form_valid(form)
+    
+    def get_context_data(self, **kwargs):
 
-    return redirect('produceplanner:overview_detail', pk=overview_id)
+        # make a list of varieties for each plant
+        plant_varieties = {}
+        for plant in Plant.objects.all().order_by('name'):
+            varieties = Variety.objects.filter(variety_plant=plant).order_by('variety_name')
+            plant_varieties[plant.id] = varieties
+        
+        context = super().get_context_data(**kwargs)
+        overview = get_object_or_404(ProducePlanOverview, id=self.kwargs['overview_id'])
+        context['overview'] = overview
+        context['available_plants'] = Plant.objects.all().order_by('name')
+        context['available_varieties'] = plant_varieties
+        context['page_app'] = 'produceplanner'
+        context['page_name'] = 'produceplan'
+        context['page_action'] = 'create'
+        return context
 
-@login_required
-@require_POST
-def delete_produce(request, plan_id):
-    plan = get_object_or_404(ProducePlan, id=plan_id)
-    overview_id = plan.produce_plan_overview.id
-    plan.delete()
-    messages.success(request, 'Produce removed from plan')
-    return JsonResponse({'status': 'success'})
+class ProducePlanUpdateView(LoginRequiredMixin, UpdateView):
+    model = ProducePlan
+    form_class = ProducePlanForm
+    template_name = 'produceplanner/produceplan_form.html'
+    
+    def get_success_url(self):
+        return reverse_lazy('produceplanner:overview_detail', kwargs={'pk': self.object.produce_plan_overview.id})
+    
+    def form_valid(self, form):
+        instance = form.save()
+        
+        plant_name = instance.plant.name
+        if instance.variety:
+            plant_name = f"{instance.plant.name} ({instance.variety.variety_name})"
+        
+        messages.success(self.request, f'Updated {plant_name} in the produce plan')
+        return super().form_valid(form)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['overview'] = self.object.produce_plan_overview
+        context['available_plants'] = Plant.objects.all().order_by('name')
+        context['available_varieties'] = Variety.objects.all().order_by('variety_name')
+        context['page_app'] = 'produceplanner'
+        context['page_name'] = 'produceplan'
+        context['page_action'] = 'update'
+        return context
+
+class ProducePlanDeleteView(LoginRequiredMixin, DeleteView):
+    model = ProducePlan
+    template_name = 'produceplanner/produceplan_confirm_delete.html'
+    context_object_name = 'produceplan'
+    
+    def get_success_url(self):
+        return reverse_lazy('produceplanner:overview_detail', kwargs={'pk': self.object.produce_plan_overview.id})
+    
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        success_url = self.get_success_url()
+        self.object.delete()
+        messages.success(request, 'Produce removed from plan')
+        return redirect(success_url)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_app'] = 'produceplanner'
+        context['page_name'] = 'produceplan'
+        context['page_action'] = 'delete'
+        return context

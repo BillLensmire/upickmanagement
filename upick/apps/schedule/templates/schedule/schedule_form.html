@@ -43,16 +43,16 @@
                         {% endif %}
                         
                         <div class="mb-3">
-                            <label for="garden_plan" class="form-label">Garden Plan Year</label>
-                            <select name="garden_plan" id="garden_plan" class="form-select" required>
-                                <option value="">Select a Garden Plan</option>
-                                {% for plan in garden_plans %}
-                                <option value="{{ plan.id }}" {% if form.garden_plan.value == plan.id|stringformat:'i' %}selected{% elif schedule and schedule.garden_plan.id == plan.id %}selected{% endif %}>
+                            <label for="produce_plan" class="form-label">Produce Plan</label>
+                            <select name="produce_plan" id="produce_plan" class="form-select" required>
+                                <option value="">Select a Produce Plan</option>
+                                {% for plan in produce_plans %}
+                                <option value="{{ plan.id }}" {% if form.produce_plan.value == plan.id|stringformat:'i' %}selected{% elif schedule and schedule.produce_plan.id == plan.id %}selected{% endif %}>
                                     {{ plan.name }} ({{ plan.year }})
                                 </option>
                                 {% endfor %}
                             </select>
-                            <div class="invalid-feedback">Please select a garden plan.</div>
+                            <div class="invalid-feedback">Please select a produce plan.</div>
                         </div>
 
                         <div class="mb-3">
@@ -200,8 +200,8 @@
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <div class ="form-text">Planting Method: {{ schedule.variety.variety_planting_method }}</div>
-                                    <div class="form-text">** Changing the Expected Harvest Date will adjust the Outside and Inside Planting Dates</div>
+                                    <div id="planting-method" class="form-text">Planting Method: {{ schedule.variety.variety_planting_method }}</div>
+                                    <div id="harvest-date-note" class="form-text">** Changing the Expected Harvest Date will adjust the Outside and Inside Planting Dates</div>
                                 </div>
                             </div>
                         </div>
@@ -539,6 +539,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('days-to-maturity').textContent = '--';
             document.getElementById('days-from-seed-to-transplant').textContent = '--';
             document.getElementById('days-from-frost-to-transplant').textContent = '--';
+            document.getElementById('planting-method').textContent = '--';
             return;
         }
         
@@ -555,6 +556,8 @@ document.addEventListener('DOMContentLoaded', function() {
             (varietyData.fall_frost_date !== undefined) ? varietyData.fall_frost_date : '--';
         document.getElementById('earliest-outside-planting-date').textContent = 
             (varietyData.earliest_outside_planting_date !== undefined) ? varietyData.earliest_outside_planting_date : '--';
+        document.getElementById('planting-method').textContent = 
+            (varietyData.planting_method !== undefined) ? "Planting Method: " + varietyData.planting_method : '--';
     }
     
     // Initialize variety info if a variety is already selected

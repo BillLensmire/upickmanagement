@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% with page_app='produceplanner' page_name='produceplan' page_action='form' %}
+{% block title %}{% if form.instance.id %}Edit{% else %}Add{% endif %} Produce Plan{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'produceplanner:overview_list' %}">Produce Plans</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'produceplanner:overview_detail' overview.pk %}">{{ overview.name }}</a></li>
+            <li class="breadcrumb-item active">{% if form.instance.id %}Edit{% else %}Add{% endif %} Produce To Plan</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% if form.instance.id %}Edit{% else %}Add{% endif %} Produce To Plan</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% if form.instance.id %}{% url 'produceplanner:produceplan_update' form.instance.id %}{% else %}{% url 'produceplanner:produceplan_create' overview.pk %}{% endif %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="id_plant" class="form-label">Plant</label>
+                            <select class="form-select" id="id_plant" name="plant" required>
+                                <option value="">Select a plant...</option>
+                                {% for plant in available_plants %}
+                                <option value="{{ plant.id }}" {% if form.instance.plant_id == plant.id %}selected{% endif %}>
+                                    {{ plant.name }}
+                                    {% if plant.variety_name %}({{ plant.variety_name }}){% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.plant.errors %}
+                                <div class="invalid-feedback d-block">{{ form.plant.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_variety" class="form-label">Variety</label>
+                            <select class="form-select" id="id_variety" name="variety">
+                                <option value="">Select a variety...</option>
+                                {% for variety in available_varieties %}
+                                <option value="{{ variety.id }}" {% if form.instance.variety_id == variety.id %}selected{% endif %}>
+                                    {{ variety.variety_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.variety.errors %}
+                                <div class="invalid-feedback d-block">{{ form.variety.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <input type="hidden" name="produce_plan_overview" value="{{ overview.pk }}">
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'produceplanner:overview_detail' overview.pk %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">{% if form.instance.id %}Update{% else %}Add{% endif %} Produce</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#id_plant').change(function() {
+            var plantId = $(this).val();
+            if (plantId) {
+                $.ajax({
+                    url: '/plants/get-varieties/' + plantId + '/',
+                    success: function(data) {
+                        console.log(data);
+                        $('#id_variety').empty();
+                        $.each(data.varieties, function(index, variety) {
+                            $('#id_variety').append($('<option>', {
+                                value: variety.id,
+                                text: variety.variety_name
+                            }));
+                        });
+                    }
+                });
+            } else {
+                $('#id_variety').empty();
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endwith %}

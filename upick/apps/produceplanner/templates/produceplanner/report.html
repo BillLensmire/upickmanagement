@@ -48,8 +48,8 @@
 <div class="container">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'planning:garden_plan_list' %}">Garden Plans</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'planning:garden_plan_detail' overview.garden_plan.id %}">{{ overview.garden_plan.name }}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'produceplanner:overview_list' %}">Produce Plans</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'produceplanner:overview_detail' overview.id %}">{{ overview.name }}</a></li>
             <li class="breadcrumb-item active">Produce Availability Report</li>
         </ol>
     </nav>
@@ -57,7 +57,8 @@
     <div class="row mb-4">
         <div class="col-md-12">
             <h1>Produce Availability Report</h1>
-            <h4 class="text-muted">{{ overview.garden_plan.name }} {{ overview.garden_plan.year }}</h4>
+            <h4 class="text-muted">Produce Plan: {{ overview.name }} </h4>
+            <h4 class="text-muted">For Year: {{ overview.overall_start_date.year }}</h4>
         </div>
     </div>
     <div class="table-wrapper">

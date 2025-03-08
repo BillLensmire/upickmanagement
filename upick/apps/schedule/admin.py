@@ -86,7 +86,6 @@ class PlantingScheduleAdmin(admin.ModelAdmin):
     list_display = (
         'garden_bed',
         'variety',
-        'garden_plan',
         'status',
         'planting_method_display',
         'inside_planting_date',
@@ -98,7 +97,6 @@ class PlantingScheduleAdmin(admin.ModelAdmin):
     list_filter = (
         'status',
         'garden_bed',
-        'garden_plan',
         'inside_planting_date',
         'outside_planting_date',
         'harvest_date',
@@ -197,7 +195,6 @@ class PlantingScheduleAdmin(admin.ModelAdmin):
             new_schedule = PlantingSchedule.objects.create(
                 garden_bed=schedule.garden_bed,
                 variety=schedule.variety,
-                garden_plan=schedule.garden_plan,
                 group=schedule.group,
                 seed_inventory=schedule.seed_inventory,
                 inside_planting_date=schedule.inside_planting_date,
@@ -231,7 +228,6 @@ class PlantingScheduleAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Basic Information', {
             'fields': (
-                'garden_plan',
                 'garden_bed',
                 'variety',
                 'seed_inventory',

@@ -1,9 +1,9 @@
 from django import forms
 from datetime import datetime
+from apps.produceplanner.models import ProducePlanOverview
 from .models import TodoTask, TodoList, PlantingSchedule, GardenBed
 from django.contrib.auth.models import Group
 from apps.plants.models import Variety
-from apps.planning.models import GardenPlan
 from django.db.models import Q
 
 class TodoTaskForm(forms.ModelForm):
@@ -102,14 +102,13 @@ class PlantingScheduleForm(forms.ModelForm):
     
     class Meta:
         model = PlantingSchedule
-        fields = ['garden_bed', 'variety', 'garden_plan', 'quantity', 'rows', 
+        fields = ['garden_bed', 'variety', 'quantity', 'rows', 
                  'inside_planting_date', 'outside_planting_date', 'harvest_date', 'notes', 'location_notes']
         widgets = {
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'location_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'garden_bed': forms.Select(attrs={'class': 'form-control'}),
             'variety': forms.Select(attrs={'class': 'form-control'}),
-            'garden_plan': forms.Select(attrs={'class': 'form-control'}),
             'quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
             'rows': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
         }
@@ -130,15 +129,6 @@ class PlantingScheduleForm(forms.ModelForm):
             self.fields['variety'].queryset = Variety.objects.filter(
                 Q(variety_plant__group__in=self.request.user.groups.all()) | Q(variety_plant__group=None)
             ).select_related('variety_plant')
-            
-            # Filter garden plans by the selected year and user's groups
-            self.fields['garden_plan'].queryset = GardenPlan.objects.filter(
-                group__in=self.request.user.groups.all(), 
-                year=self.selected_year
-            ).order_by('-year', 'name')
-            
-            # Make garden_plan required
-            self.fields['garden_plan'].required = True
             
             # Make garden_bed required
             self.fields['garden_bed'].required = True

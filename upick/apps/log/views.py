@@ -8,13 +8,14 @@ from .models import LogEntry
 from django.db.models import Q
 from apps.plants.models import Plant
 from apps.beneficials.models import Beneficial
-from apps.planning.models import GardenPlan, SeedSource
+from apps.planning.models import SeedSource
 from apps.foliarrecipes.models import FoliarRecipe
 from apps.schedule.models import GardenBed
 from datetime import date
 from django.urls import reverse_lazy
 from django.views.generic.edit import DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from apps.produceplanner.models import ProducePlanOverview
 
 def get_user_group(request):
     """Get the user's active group or return None if user has no groups.
@@ -102,8 +103,8 @@ def log_create(request):
             # Handle single foreign key fields
             if request.POST.get('plant_schedule'):
                 try:
-                    log_entry.plant_schedule = GardenPlan.objects.get(id=request.POST['plant_schedule'])
-                except GardenPlan.DoesNotExist:
+                    log_entry.plant_schedule = ProducePlanOverview.objects.get(id=request.POST['plant_schedule'])
+                except ProducePlanOverview.DoesNotExist:
                     log_entry.plant_schedule = None
             
             if request.POST.get('foliar_recipe'):
@@ -135,12 +136,6 @@ def log_create(request):
                     log_entry.seed_source = SeedSource.objects.get(id=request.POST['seed_source'])
                 except SeedSource.DoesNotExist:
                     log_entry.seed_source = None
-        
-            if request.POST.get('garden_plan'):
-                try:
-                    log_entry.garden_plan = GardenPlan.objects.get(id=request.POST['garden_plan'])
-                except GardenPlan.DoesNotExist:
-                    log_entry.garden_plan = None
             
             if request.POST.get('description_includes_latex') == 'on':
                 log_entry.description_includes_latex = True
@@ -157,11 +152,11 @@ def log_create(request):
     
     context = {
         'entry_types': sorted(LogEntry.ENTRY_TYPE_CHOICES, key=lambda x: x[1]),  # Sort by display name
-        'garden_plans': GardenPlan.objects.all(),
-        'foliar_recipes': FoliarRecipe.objects.all(),
-        'beneficials': Beneficial.objects.all(),
-        'garden_beds': GardenBed.objects.all(),
-        'seed_sources': SeedSource.objects.all(),
+        'produce_plans': ProducePlanOverview.objects.filter(group__in=request.user.groups.all()),
+        'foliar_recipes': FoliarRecipe.objects.filter(group__in=request.user.groups.all()),
+        'beneficials': Beneficial.objects.filter(group__in=request.user.groups.all()),
+        'garden_beds': GardenBed.objects.filter(group__in=request.user.groups.all()),
+        'seed_sources': SeedSource.objects.filter(group__in=request.user.groups.all()),
         'groups': Group.objects.all(),
     }
     return render(request, 'log/log_form.html', context)
@@ -187,7 +182,7 @@ def log_edit(request, pk):
                 'log_entry': log_entry,
                 'entry_types': sorted_entry_types,
                 'plants': Plant.objects.all(),
-                'garden_plans': GardenPlan.objects.all(),
+                'produce_plans': ProducePlanOverview.objects.all(),
                 'foliar_recipes': FoliarRecipe.objects.all(),
                 'beneficials': Beneficial.objects.all(),
                 'garden_beds': GardenBed.objects.all(),
@@ -238,8 +233,8 @@ def log_edit(request, pk):
         # Handle single foreign key fields
         if request.POST.get('plant_schedule'):
             try:
-                log_entry.plant_schedule = GardenPlan.objects.get(id=request.POST['plant_schedule'])
-            except GardenPlan.DoesNotExist:
+                log_entry.plant_schedule = ProducePlanOverview.objects.get(id=request.POST['plant_schedule'])
+            except ProducePlanOverview.DoesNotExist:
                 log_entry.plant_schedule = None
         
         if request.POST.get('foliar_recipe'):
@@ -271,12 +266,6 @@ def log_edit(request, pk):
                 log_entry.seed_source = SeedSource.objects.get(id=request.POST['seed_source'])
             except SeedSource.DoesNotExist:
                 log_entry.seed_source = None
-        
-            if request.POST.get('garden_plan'):
-                try:
-                    log_entry.garden_plan = GardenPlan.objects.get(id=request.POST['garden_plan'])
-                except GardenPlan.DoesNotExist:
-                    log_entry.garden_plan = None
 
         # Save all changes
         log_entry.save()
@@ -291,7 +280,7 @@ def log_edit(request, pk):
         'log_entry': log_entry,
         'entry_types': sorted_entry_types,
         'plants': Plant.objects.filter(group__in=request.user.groups.all()),
-        'garden_plans': GardenPlan.objects.filter(group__in=request.user.groups.all()),
+        'produce_plans': ProducePlanOverview.objects.filter(group__in=request.user.groups.all()),
         'foliar_recipes': FoliarRecipe.objects.filter(group__in=request.user.groups.all()),
         'beneficials': Beneficial.objects.filter(group__in=request.user.groups.all()),
         'garden_beds': GardenBed.objects.filter(group__in=request.user.groups.all()),
