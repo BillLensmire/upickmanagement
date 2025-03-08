@@ -7,7 +7,7 @@
             <h1>Planting Schedule for {{ produceplan.name }}</h1>
         </div>
         <div class="col-md-4 text-end">
-            <a href="{% url 'schedule:create' %}{% if selected_year %}?year={{ selected_year }}{% endif %}" class="btn btn-success">
+            <a href="{% url 'schedule:create' %}?produceplanid={{ produceplan.id }}" class="btn btn-success">
                 <i class="fas fa-plus"></i> New Planting Schedule Entry
             </a>
         </div>

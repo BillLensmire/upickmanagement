@@ -78,9 +78,7 @@ class GardenBedListView(LoginRequiredMixin, ListView):
         
         # For each garden bed, get its current plants
         for bed in garden_beds:
-            bed.current_plants = bed.plantingschedule_set.filter(
-                status__in=['PLANNED', 'PLANTED']
-            ).select_related('variety').order_by('variety__variety_name')
+            bed.current_plants = bed.plantingschedule_set.all().select_related('variety').order_by('variety__variety_name')
 
         # Get current year and available years
         current_year = datetime.now().year
@@ -134,7 +132,7 @@ class GardenBedCreateView(LoginRequiredMixin, CreateView):
             year = int(year)
         except (TypeError, ValueError):
             year = datetime.now().year
-        return {'year': year, 'width_feet': garden_config.default_bed_length, 'length_feet': garden_config.default_bed_width}
+        return {'year': year, 'width_feet': garden_config.default_bed_width, 'length_feet': garden_config.default_bed_length}
 
     def form_valid(self, form):
         group = get_user_group(self.request)
@@ -351,19 +349,14 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
         kwargs['request'] = self.request
         
         # Get selected year from query parameters or use current year
-        selected_year = self.request.GET.get('year')
-        if selected_year:
-            try:
-                selected_year = int(selected_year)
-            except (ValueError, TypeError):
-                selected_year = datetime.now().year
-        else:
-            selected_year = datetime.now().year
-            
-        kwargs['selected_year'] = selected_year
+        produceplanid = self.request.GET.get('produceplanid')
+        if produceplanid:
+            kwargs['produceplanid'] = produceplanid
         return kwargs
     
     def get_success_url(self):
+        if self.request.GET.get('produceplanid'):
+            return reverse_lazy('schedule:view_planning_schedule', kwargs={'pk': self.request.GET.get('produceplanid')})
         return reverse_lazy('schedule:detail', kwargs={'schedule_id': self.object.id})
     
     def form_valid(self, form):
@@ -413,17 +406,7 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
         
         # Get garden configuration
         garden_config = GardenConfiguration.get_settings()
-        
-        # Get selected year from query parameters or use current year
-        selected_year = self.request.GET.get('year')
-        if selected_year:
-            try:
-                selected_year = int(selected_year)
-            except (ValueError, TypeError):
-                selected_year = datetime.now().year
-        else:
-            selected_year = datetime.now().year
-        
+                
         # Get varieties for JavaScript data
         varieties = Variety.objects.filter(
             Q(variety_plant__group__in=self.request.user.groups.all()) | Q(variety_plant__group=None)
@@ -431,9 +414,10 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
         
         # Get produce plans for JavaScript data
         produce_plans = ProducePlanOverview.objects.filter(
-            group__in=self.request.user.groups.all(), 
-            year=selected_year
+            group__in=self.request.user.groups.all()
         ).order_by('-year', 'name')
+
+        selectedproduce_plan = ProducePlanOverview.objects.filter(id=self.request.GET.get('produceplanid')).first()
         
         # Prepare JSON data for JavaScript
         produce_plans_json = [{'id': plan.id, 'year': plan.year, 'name': plan.name} for plan in produce_plans]
@@ -482,6 +466,7 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
         varieties_data_json = safe_json_dumps(varieties_data)
         
         context.update({
+            'selectedproduce_plan': selectedproduce_plan,
             'spring_frost_date': garden_config.spring_frost_date,
             'fall_frost_date': garden_config.fall_frost_date,
             'garden_beds': garden_beds,
@@ -494,7 +479,6 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
             'page_app': 'schedule',
             'page_name': 'schedule',
             'page_action': 'form',
-            'selected_year': selected_year
         })
         return context
 

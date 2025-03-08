@@ -69,14 +69,15 @@
                     <td>
                         {% for schedule in bed.current_plants %}
                             <div class="mb-1">
-                                {{ schedule.plant.name }}
-                                {% if schedule.plant.variety_name %}
-                                    ({{ schedule.plant.variety_name }})
+                                {{ schedule.variety.variety_plant.name }}
+                                {% if schedule.variety.variety_name %}
+                                    ({{ schedule.variety.variety_name }})
                                 {% endif %}
                                 <small class="text-muted">
-                                    - {{ schedule.get_status_display }}
                                     {% if schedule.quantity > 1 %}
                                         - {{ schedule.quantity }} plants
+                                        {% else %}
+                                        - {{ schedule.quantity }} plant
                                     {% endif %}
                                 </small>
                             </div>

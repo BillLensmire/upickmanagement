@@ -149,14 +149,13 @@ class PlantingScheduleForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
-        self.selected_year = kwargs.pop('selected_year', None)
+        self.produceplanid = kwargs.pop('produceplanid', None)
         super().__init__(*args, **kwargs)
         
         if self.request and self.request.user.groups.exists():
-            # Filter garden beds by the selected year and user's groups
+            # Filter garden beds by user's groups
             self.fields['garden_bed'].queryset = GardenBed.objects.filter(
-                group__in=self.request.user.groups.all(),
-                year=self.selected_year
+                group__in=self.request.user.groups.all()
             )
             
             # Filter varieties by user's groups

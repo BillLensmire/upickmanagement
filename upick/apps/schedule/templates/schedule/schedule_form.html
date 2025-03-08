@@ -47,7 +47,7 @@
                             <select name="produce_plan" id="produce_plan" class="form-select" required>
                                 <option value="">Select a Produce Plan</option>
                                 {% for plan in produce_plans %}
-                                <option value="{{ plan.id }}" {% if form.produce_plan.value == plan.id|stringformat:'i' %}selected{% elif schedule and schedule.produce_plan.id == plan.id %}selected{% endif %}>
+                                <option value="{{ plan.id }}" {% if selectedproduce_plan.id == plan.id %}selected{% endif %}>
                                     {{ plan.name }} ({{ plan.year }})
                                 </option>
                                 {% endfor %}
@@ -60,7 +60,7 @@
                             <select name="garden_bed" id="garden_bed" class="form-select" required>
                                 <option value="">Select a Garden Bed</option>
                                 {% for bed in garden_beds %}
-                                <option value="{{ bed.id }}" {% if form.garden_bed.value == bed.id|stringformat:'i' %}selected{% elif schedule and schedule.garden_bed.id == bed.id %}selected{% endif %}>
+                                <option value="{{ bed.id }}" {% if selectedgarden_bed.id == bed.id|stringformat:'i' %}selected{% elif schedule and schedule.garden_bed.id == bed.id %}selected{% endif %}>
                                     {{ bed.name }} ({{ bed.width_feet }}' x {{ bed.length_feet }}')
                                 </option>
                                 {% endfor %}
