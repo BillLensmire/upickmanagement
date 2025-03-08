@@ -117,7 +117,6 @@
                         <ul class="dropdown-menu" aria-labelledby="notesDropdown">
                             <li><a class="dropdown-item" href="{% url 'schedule:todo_list_list' %}"><i class="fas fa-list me-2"></i>Todo Lists</a></li>
                             <li><a class="dropdown-item" href="{% url 'schedule:todo_task_list' %}"><i class="fas fa-tasks me-2"></i>Todo Tasks</a></li>
-                            <li><a class="dropdown-item" href="{% url 'reminders:reminder_list' %}"><i class="fas fa-bell me-2"></i>Reminders</a></li>
                             <li><a class="dropdown-item" href="{% url 'log:log_list' %}"><i class="fas fa-bug me-2"></i>Garden Note Log</a></li>
                         </ul>
                     </li>
@@ -127,9 +126,10 @@
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="planningDropdown">
                             <li><a class="dropdown-item" href="{% url 'plants:list' %}"><i class="fas fa-leaf me-2"></i>Plants</a></li>
+                            <li><a class="dropdown-item" href="{% url 'plants:variety_list' %}"><i class="fas fa-seedling me-2"></i>Varieties</a></li>
                             <li><a class="dropdown-item" href="{% url 'schedule:garden_bed_list' %}"><i class="fas fa-th me-2"></i>Garden Beds</a></li>
-                            <li><a class="dropdown-item" href="{% url 'schedule:list' %}"><i class="fas fa-calendar-alt me-2"></i>Plants Per Bed</a></li>
                             <li><a class="dropdown-item" href="{% url 'produceplanner:overview_list' %}"><i class="fas fa-carrot me-2"></i>Produce Plans</a></li>
+                            <li><a class="dropdown-item" href="{% url 'schedule:list' %}"><i class="fas fa-calendar-alt me-2"></i>Planting Schedules</a></li>
                             <li><a class="dropdown-item" href="{% url 'schedule:calendar' %}"><i class="fas fa-calendar me-2"></i>Calendar</a></li>
                         </ul>
                     </li>

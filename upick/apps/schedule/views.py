@@ -126,13 +126,15 @@ class GardenBedCreateView(LoginRequiredMixin, CreateView):
         return base_url
 
     def get_initial(self):
+        # Get garden configuration
+        garden_config = GardenConfiguration.get_settings()
         # Set default year from query params or current year
         year = self.request.GET.get('year', datetime.now().year)
         try:
             year = int(year)
         except (TypeError, ValueError):
             year = datetime.now().year
-        return {'year': year}
+        return {'year': year, 'width_feet': garden_config.default_bed_length, 'length_feet': garden_config.default_bed_width}
 
     def form_valid(self, form):
         group = get_user_group(self.request)
@@ -544,7 +546,8 @@ class ScheduleUpdateView(LoginRequiredMixin, UpdateView):
             instance.schedule_status = self.request.POST.get('status')
             instance.schedule_notes = self.request.POST.get('notes')
             instance.schedule_location_notes = self.request.POST.get('location_notes')
-            instance.produce_plan = self.request.POST.get('produce_plan')
+            produceplan = ProducePlanOverview.objects.get(id=self.request.POST.get('produce_plan'))
+            instance.produce_plan = produceplan
             harvest_date_str = self.request.POST.get('harvest_date')
             if harvest_date_str:
                 harvest_date = datetime.strptime(harvest_date_str, '%m/%d/%Y').strftime('%Y-%m-%d')
@@ -561,8 +564,6 @@ class ScheduleUpdateView(LoginRequiredMixin, UpdateView):
             instance.variety = variety
             garden_bed = GardenBed.objects.get(id=self.request.POST.get('garden_bed'))
             instance.garden_bed = garden_bed
-            produce_plan = ProducePlanOverview.objects.get(id=self.request.POST.get('produce_plan'))
-            instance.produce_plan = produce_plan
             instance.save()
 
             messages.success(self.request, 'Schedule updated successfully.')
@@ -869,7 +870,11 @@ class TodoTaskCreateView(LoginRequiredMixin, CreateView):
         form.fields['planting_schedule'].queryset = PlantingSchedule.objects.filter(
             group__in=self.request.user.groups.all()
         )
-        form.fields['group'].queryset = self.request.user.groups.all()
+        # Filter task lists by TodoList
+        if 'tasklist' in form.fields:
+            form.fields['tasklist'].queryset = TodoList.objects.filter(
+                group__in=self.request.user.groups.all()
+            )
         return form
     
     def get_context_data(self, **kwargs):
@@ -914,7 +919,9 @@ class TodoTaskUpdateView(LoginRequiredMixin, UpdateView):
         form.fields['planting_schedule'].queryset = PlantingSchedule.objects.filter(
             group__in=self.request.user.groups.all()
         )
-        form.fields['group'].queryset = self.request.user.groups.all()
+        form.fields['tasklist'].queryset = TodoList.objects.filter(
+            group__in=self.request.user.groups.all()
+        )
         return form
     
     def get_context_data(self, **kwargs):
@@ -947,8 +954,7 @@ class TodoTaskDetailView(LoginRequiredMixin, DetailView):
         context.update({
             'page_app': 'schedule',
             'page_name': 'todo_task',
-            'page_action': 'detail',
-            'todo_lists': self.get_object().todo_lists.all(),
+            'page_action': 'detail'
         })
         return context
 
@@ -980,6 +986,8 @@ class TodoListListView(LoginRequiredMixin, ListView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        todo_tasks = TodoTask.objects.filter(tasklist__in=self.get_queryset())
+        context['todo_tasks'] = todo_tasks
         context.update({
             'page_app': 'schedule',
             'page_name': 'todo_list',
@@ -1009,14 +1017,13 @@ class TodoListCreateView(LoginRequiredMixin, CreateView):
     
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
-        # Filter tasks by user's groups
-        form.fields['tasks'].queryset = TodoTask.objects.filter(
-            group__in=self.request.user.groups.all()
-        )
         return form
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        # get the list of todo tasks for this list
+        todo_tasks = TodoTask.objects.filter(tasklist=self.get_object())
+        context['todo_tasks'] = todo_tasks
         context.update({
             'page_app': 'schedule',
             'page_name': 'todo_list',
@@ -1043,15 +1050,13 @@ class TodoListUpdateView(LoginRequiredMixin, UpdateView):
     
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
-        # Filter tasks by user's groups
-        form.fields['tasks'].queryset = TodoTask.objects.filter(
-            group__in=self.request.user.groups.all()
-        )
-        form.fields['group'].queryset = self.request.user.groups.all()
         return form
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        # get the list of todo tasks for this list
+        todo_tasks = TodoTask.objects.filter(tasklist=self.get_object())
+        context['todo_tasks'] = todo_tasks
         context.update({
             'page_app': 'schedule',
             'page_name': 'todo_list',
@@ -1071,12 +1076,12 @@ class TodoListDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         todo_list = self.get_object()
+        todo_tasks = TodoTask.objects.filter(tasklist=todo_list)
+        context['todo_tasks'] = todo_tasks
         context.update({
             'page_app': 'schedule',
             'page_name': 'todo_list',
-            'page_action': 'detail',
-            'tasks': todo_list.tasks.all().order_by('due_date', 'priority'),
-            'completion_percentage': todo_list.get_completion_percentage(),
+            'page_action': 'detail'
         })
         return context
 
@@ -1263,3 +1268,8 @@ def export_calendar_pdf(request):
     doc.build(elements)
     
     return response
+
+class ScheduleDeleteView(DeleteView):
+    model = PlantingSchedule
+    template_name = 'schedule/schedule_confirm_delete.html'
+    success_url = reverse_lazy('schedule:list')

@@ -5,6 +5,7 @@ from .models import TodoTask, TodoList, PlantingSchedule, GardenBed
 from django.contrib.auth.models import Group
 from apps.plants.models import Variety
 from django.db.models import Q
+from django.forms import DateInput
 
 class TodoTaskForm(forms.ModelForm):
     """Form for creating and updating Todo Tasks"""
@@ -13,40 +14,73 @@ class TodoTaskForm(forms.ModelForm):
     due_date = forms.DateField(
         required=False,
         input_formats=['%m/%d/%Y', '%Y-%m-%d'],
-        widget=forms.DateInput(attrs={
-            'class': 'form-control datepicker',
-            'data-date-format': 'mm/dd/yyyy',
-            'placeholder': 'MM/DD/YYYY',
-            'autocomplete': 'off'
+        widget=DateInput(attrs={
+            'type': 'date', 
+            'class': 'form-control datepicker', 
+            'data-date-format': 'yyyy/mm/dd'
         })
+    )
+    
+    tasklist = forms.ModelChoiceField(
+        queryset=TodoList.objects.none(),
+        empty_label='Select a Task List',
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        required=True
     )
     
     class Meta:
         model = TodoTask
-        fields = ['title', 'description', 'due_date', 'priority', 'status', 
-                  'garden_bed', 'planting_schedule', 'group']
+        fields = ['title', 'tasklist', 'description', 'due_date', 'priority', 'status', 
+                  'garden_bed', 'planting_schedule']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'tasklist': forms.Select(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'priority': forms.Select(attrs={'class': 'form-control'}),
             'status': forms.Select(attrs={'class': 'form-control'}),
             'garden_bed': forms.Select(attrs={'class': 'form-control'}),
             'planting_schedule': forms.Select(attrs={'class': 'form-control'}),
-            'group': forms.Select(attrs={'class': 'form-control'}),
         }
-
+    
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        super().__init__(*args, **kwargs)
+        
+        if self.request and self.request.user.groups.exists():
+            # Filter task lists by user's groups
+            self.fields['tasklist'].queryset = TodoList.objects.filter(
+                group__in=self.request.user.groups.all()
+            )
+            
+            # Filter garden beds by user's groups
+            self.fields['garden_bed'].queryset = GardenBed.objects.filter(
+                group__in=self.request.user.groups.all()
+            )
+            
+            # Filter planting schedules by user's groups
+            self.fields['planting_schedule'].queryset = PlantingSchedule.objects.filter(
+                group__in=self.request.user.groups.all()
+            )
+            
+            # Make tasklist required
+            self.fields['tasklist'].required = True
+            
+            # Make garden_bed required
+            self.fields['garden_bed'].required = False
+            
+            # Make planting_schedule required
+            self.fields['planting_schedule'].required = False
+    
 
 class TodoListForm(forms.ModelForm):
     """Form for creating and updating Todo Lists"""
     
     class Meta:
         model = TodoList
-        fields = ['title', 'description', 'tasks', 'group']
+        fields = ['title', 'description']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'tasks': forms.SelectMultiple(attrs={'class': 'form-control'}),
-            'group': forms.Select(attrs={'class': 'form-control'}),
         }
 
 

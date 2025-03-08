@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container">
     <div class="row mb-4">
-        <div class="col-md-8">
+        <div class="col-md-4">
             <h1>Task Details</h1>
         </div>
         <div class="col-md-4 text-end">
@@ -36,7 +36,7 @@
                 </div>
                 <div class="card-body">
                     <h3 class="mb-3">{{ todo_task.title }}</h3>
-                    
+                    <h5 class="mb-3">On List: {{ todo_task.tasklist.title }}</h5>
                     <div class="row mb-3">
                         <div class="col-md-4">
                             <strong>Status:</strong>
@@ -106,29 +106,6 @@
                             <strong>Last Updated:</strong> {{ todo_task.updated_at|date:"F j, Y, g:i a" }}
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Todo Lists</h5>
-                </div>
-                <div class="card-body">
-                    {% if todo_lists %}
-                        <ul class="list-group">
-                            {% for todo_list in todo_lists %}
-                                <li class="list-group-item">
-                                    <a href="{% url 'schedule:todo_list_detail' todo_list.id %}">
-                                        {{ todo_list.title }}
-                                    </a>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p class="text-muted">This task is not part of any todo list.</p>
-                    {% endif %}
                 </div>
             </div>
         </div>

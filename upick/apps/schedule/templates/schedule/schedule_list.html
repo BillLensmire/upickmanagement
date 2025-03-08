@@ -92,6 +92,9 @@
                                 <a href="{% url 'schedule:duplicate' schedule.id %}" class="btn btn-sm btn-outline-secondary" title="Duplicate">
                                     <i class="fas fa-copy"></i>
                                 </a>
+                                <a href="{% url 'schedule:delete' schedule.id %}" class="btn btn-sm btn-outline-danger" title="Delete" onclick="return confirm('Are you sure you want to delete this schedule?')">
+                                    <i class="fas fa-trash"></i>
+                                </a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -106,6 +109,7 @@
     {% empty %}
     <div class="alert alert-info">
         <h5>No Garden Beds Found</h5>
+        <h5>Create a garden plan first to start planning your planting schedule.</h5>
         <p class="mb-0">Create a garden bed first to start planning your planting schedule.</p>
     </div>
     {% endfor %}
