@@ -1,48 +1,15 @@
 {% extends 'base.html' %}
-
 {% block title %}Planting Schedule - You Pick Manager{% endblock %}
-
 {% block content %}
 <div class="container">
     <div class="row mb-4">
         <div class="col-md-8">
-            <h1>Planting Schedule</h1>
+            <h1>Planting Schedule for {{ produceplan.name }}</h1>
         </div>
         <div class="col-md-4 text-end">
             <a href="{% url 'schedule:create' %}{% if selected_year %}?year={{ selected_year }}{% endif %}" class="btn btn-success">
                 <i class="fas fa-plus"></i> New Planting Schedule Entry
             </a>
-        </div>
-    </div>
-
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="get" class="row g-3">
-                <div class="col-md-2">
-                    <label for="year" class="form-label">Produce Plan</label>
-                    <select name="year" id="year" class="form-select">
-                        {% for year in available_years %}
-                        <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>
-                            {{ year }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="status" class="form-label">Status</label>
-                    <select name="status" id="status" class="form-select">
-                        <option value="">All Statuses</option>
-                        {% for status_code, status_label in status_choices %}
-                        <option value="{{ status_code }}" {% if status_code == selected_status %}selected{% endif %}>
-                            {{ status_label }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">Filter</button>
-                </div>
-            </form>
         </div>
     </div>
 

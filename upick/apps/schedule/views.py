@@ -20,7 +20,7 @@ from .models import PlantingSchedule, GardenBed, TodoTask, TodoList
 from .forms import TodoTaskForm, TodoListForm
 from apps.plants.models import Plant, Variety
 from .forms import PlantingScheduleForm
-from apps.produceplanner.models import ProducePlanOverview
+from apps.produceplanner.models import ProducePlan, ProducePlanOverview
 from apps.planning.models import GardenConfiguration
 import json
 
@@ -225,26 +225,49 @@ class GardenBedDeleteView(LoginRequiredMixin, DeleteView):
         # Redirect GET requests to the list view
         return redirect('schedule:garden_bed_list')
 
+class ViewPlantingScheduleView(LoginRequiredMixin, DetailView):
+    model = ProducePlanOverview
+    template_name = 'schedule/view_planning_schedule.html'
+    context_object_name = 'schedule'
+
+    def get_queryset(self):
+        return ProducePlanOverview.objects.filter(group__in=self.request.user.groups.all(),
+                                                id=self.kwargs['pk'])
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        produceplan = ProducePlanOverview.objects.filter(id=self.kwargs['pk']).first()
+        # Get garden beds and schedules for selected year
+        schedules_list = PlantingSchedule.objects.filter(produce_plan=produceplan)
+        garden_beds = GardenBed.objects.filter(group__in=self.request.user.groups.all())
+
+        # Group schedules by garden bed
+        schedule_by_bed = {}
+        for bed in garden_beds:
+            schedule_by_bed[bed] = schedules_list.filter(garden_bed=bed)
+    
+        context = {
+            'schedule_by_bed': schedule_by_bed,
+            'produceplan': produceplan,
+            'page_app': 'schedule',
+            'page_name': 'schedule',
+            'page_action': 'list',
+        }
+        return context
+
 @login_required
 def schedule_list(request):
     """Display list of planting schedules grouped by garden bed."""
     # Get available years from garden plans
     produce_plans = ProducePlanOverview.objects.filter(group__in=request.user.groups.all()).order_by('year')
-    available_years = produce_plans.values_list('year', flat=True).distinct()
-    
-    # Get selected year (default to latest year)
-    selected_year = request.GET.get('year')
-    if not selected_year and available_years:
-        selected_year = available_years[0]
-    elif selected_year:
-        selected_year = int(selected_year)
-    
+    #bgl
     # Get garden beds and schedules for selected year
-    garden_beds = GardenBed.objects.filter(group__in=request.user.groups.all(), year=selected_year)
+    garden_beds = GardenBed.objects.filter(group__in=request.user.groups.all())
     schedules = PlantingSchedule.objects.filter(
         garden_bed__group__in=request.user.groups.all(),
-        produce_plan__year=selected_year
-    ) if selected_year else PlantingSchedule.objects.none()
+        produce_plan__in=produce_plans
+    )
     
     # Filter by status if provided
     status = request.GET.get('status')
@@ -280,8 +303,6 @@ def schedule_list(request):
         'page_action': 'list',
         'start_date': start_date,
         'end_date': end_date,
-        'available_years': available_years,
-        'selected_year': selected_year,
     }
     return render(request, 'schedule/schedule_list.html', context)
 

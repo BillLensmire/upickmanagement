@@ -38,6 +38,7 @@
                     <td>{{ overview.overall_end_date|date:"M j, Y" }}</td>
                     <td>
                         <div class="btn-group" role="group">
+                            <a href="{% url 'schedule:view_planning_schedule' overview.pk %}" class="btn btn-sm btn-outline-danger">View Planting Schedule</a>
                             <a href="{% url 'produceplanner:overview_detail' overview.pk %}" class="btn btn-sm btn-outline-primary">View</a>
                             <a href="{% url 'produceplanner:overview_update' overview.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
                             <a href="{% url 'produceplanner:produce_availability_report' overview.pk %}" class="btn btn-sm btn-outline-info">Report</a>

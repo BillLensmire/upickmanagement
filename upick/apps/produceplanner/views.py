@@ -228,7 +228,7 @@ class ProducePlanOverviewDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['produce_plans'] = self.object.produce_plans.all().select_related('plant')
+        context['produce_plans'] = self.object.produce_plans.all().select_related('plant').order_by('plant__name', 'variety__variety_name')
         context['available_plants'] = Plant.objects.all().filter(group__in=self.request.user.groups.all())
         context['available_varieties'] = Variety.objects.all().filter(group__in=self.request.user.groups.all())
         context['page_app'] = 'produceplanner'

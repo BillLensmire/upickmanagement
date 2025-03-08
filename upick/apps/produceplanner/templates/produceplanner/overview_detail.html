@@ -54,7 +54,9 @@
                                 {% for plan in produce_plans %}
                                 <tr>
                                     <td><a href="{% url 'plants:detail' plan.plant.id %}">{{ plan.plant.name }}</a></td>
-                                    <td><a href="{% url 'plants:variety_detail' plan.variety.id %}">{{ plan.variety.variety_name }}</a></td>
+                                    <td>
+                                        {% if plan.variety %} <a href="{% url 'plants:variety_detail' plan.variety.id %}">{{ plan.variety.variety_name }}</a> {% endif %}
+                                    </td>
                                     <td>
                                         <div class="btn-group btn-group-sm">
                                             <a href="{% url 'produceplanner:produceplan_update' plan.id %}" class="btn btn-outline-secondary">

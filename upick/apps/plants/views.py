@@ -1,11 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
 from django.views.generic.base import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy, reverse
 from django.contrib import messages
 from django.db.models import Q
 from .models import Plant, Variety
+from datetime import datetime
+import requests
+from bs4 import BeautifulSoup
 
 # Create your views here.
 
@@ -297,6 +300,26 @@ class VarietyDeleteView(LoginRequiredMixin, DeleteView):
         variety = self.get_object()
         messages.success(request, f'Variety "{variety.variety_name}" deleted successfully.')
         return super().delete(request, *args, **kwargs)
+
+class SearchMaturityView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        variety = get_object_or_404(Variety, pk=pk)
+        search_date = request.POST.get('search_date')
+
+        # Perform web search (example implementation)
+        try:
+            query = f'{variety.variety_name} days to maturity'
+            response = requests.get(f'https://www.google.com/search?q={query}')
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            # Extract relevant information (this is just an example)
+            result_element = soup.find('div', class_='BNeawe')
+            result = result_element.text if result_element else 'N/A'
+            messages.info(request, f'Search result: {result}')
+        except Exception as e:
+            messages.error(request, f'Search failed: {str(e)}')
+
+        return redirect('plants:variety_detail', pk=pk)
 
 class PlantVarietyCreateView(LoginRequiredMixin, CreateView):
     model = Variety
