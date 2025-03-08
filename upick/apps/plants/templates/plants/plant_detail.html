@@ -21,6 +21,9 @@
             {% endif %}
                 </div>
                 <div>
+                    <a href="{% url 'plants:detail' next_plant.pk %}" class="btn btn-primary">
+                        Next Plant <i class="fas fa-arrow-right"></i>
+                    </a>
                     <a href="{% url 'plants:edit' plant.pk %}" class="btn btn-primary">
                         <i class="fas fa-edit"></i> Edit Plant
                     </a>
@@ -39,6 +42,7 @@
                     <ul class="list-unstyled">
                         <li><strong>Type:</strong> {{ plant.get_seed_type_display }}</li>
                         <li><strong>Planting Method:</strong> {{ plant.get_planting_method_display }}</li>
+                        <li><strong>Is Annual:</strong> {% if plant.is_perennial %}No{% else %}Yes{% endif %}</li>
                     </ul>
                     <h5>Growing Timeline</h5>
                     <ul class="list-unstyled">

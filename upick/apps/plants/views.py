@@ -47,6 +47,8 @@ class PlantDetailView(DetailView):
         context['page_app'] = 'plants'
         context['page_name'] = 'plant'
         context['page_action'] = 'detail'
+        next_plant = Plant.objects.filter(name__gt=plant.name).order_by('name').first()
+        context['next_plant'] = next_plant if next_plant else Plant.objects.order_by('name').first()
         return context
 
 class PlantSearchView(ListView):
@@ -188,6 +190,9 @@ class VarietyDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        variety = self.get_object()
+        next_variety = Variety.objects.filter(variety_name__gt=variety.variety_name).order_by('variety_name').first()
+        context['next_variety'] = next_variety if next_variety else Variety.objects.order_by('variety_name').first()
         context['page_app'] = 'plants'
         context['page_name'] = 'variety'
         context['page_action'] = 'detail'
