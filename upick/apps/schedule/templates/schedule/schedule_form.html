@@ -81,6 +81,7 @@
                                 </option>
                                 {% endfor %}
                             </select>
+                            <button type="button" onclick="setPlantingDates()">Set Planting Dates Based on Spring Frost Date</button>
                             <div class="invalid-feedback">Please select a variety.</div>
                         </div>
 
@@ -303,9 +304,9 @@ try {
     //    varietiesData = {};
     //}
     
-    console.log('First few keys:', Object.keys(varietiesData).slice(0, 5));
-    console.log('Final varietiesData type:', typeof varietiesData);
-    console.log('Is varietiesData array?', Array.isArray(varietiesData));
+    //console.log('First few keys:', Object.keys(varietiesData).slice(0, 5));
+    //console.log('Final varietiesData type:', typeof varietiesData);
+    //console.log('Is varietiesData array?', Array.isArray(varietiesData));
     //if (typeof varietiesData === 'object') {
     //    console.log('First few keys:', Object.keys(varietiesData).slice(0, 5));
     //}
@@ -317,23 +318,119 @@ try {
 }
 
 // Debug logging
-console.log('Garden Plans (type):', typeof gardenPlans, Array.isArray(gardenPlans));
-console.log('Garden Plans:', gardenPlans);
-console.log('All Varieties (type):', typeof allVarieties, Array.isArray(allVarieties));
-console.log('All Varieties:', allVarieties);
-console.log('Varieties Data (type):', typeof varietiesData, Array.isArray(varietiesData));
-console.log('Varieties Data:', varietiesData);
+//console.log('Garden Plans (type):', typeof gardenPlans, Array.isArray(gardenPlans));
+//console.log('Garden Plans:', gardenPlans);
+//console.log('All Varieties (type):', typeof allVarieties, Array.isArray(allVarieties));
+//console.log('All Varieties:', allVarieties);
+//console.log('Varieties Data (type):', typeof varietiesData, Array.isArray(varietiesData));
+//console.log('Varieties Data:', varietiesData);
 
 // Log all keys in varietiesData
 const keys = Object.keys(varietiesData);
-console.log('Varieties Data Keys:', keys);
-console.log('Key types:', keys.map(k => typeof k));
+//console.log('Varieties Data Keys:', keys);
+//console.log('Key types:', keys.map(k => typeof k));
 
 const varietiesData2 = JSON.parse(varietiesData);
 
-// Check if key '8' exists
-console.log('Has key "8"?', '8' in varietiesData2);
-console.log('Direct access varietiesData2["8"]:', varietiesData2['8']);
+
+// Function to update variety planting dates display
+function setPlantingDates() {
+
+    const varietySelect = document.getElementById('variety');
+
+    // Update planting dates based on harvest date
+    const varietyId = varietySelect.value;
+    console.log('Variety ID:', varietyId);
+    if (! varietyId) {
+        return;
+    }
+    const varietyIdStr = String(varietyId);
+    
+    // Try to find the variety data using different approaches
+    let varietyData = null;
+    
+    // Log all keys for debugging
+    console.log('All keys in varietiesData2:', Object.keys(varietiesData2));
+    
+    // Direct access - this should work if the keys are properly formatted
+    if (varietiesData2.hasOwnProperty(varietyIdStr)) {
+        varietyData = varietiesData2[varietyIdStr];
+        console.log('Found directly with key:', varietyIdStr);
+    } else {
+        console.log('Key not found directly:', varietyIdStr);
+        
+        // Try to find the key by iterating through all keys (case-sensitive)
+        for (const key of Object.keys(varietiesData2)) {
+            console.log('Comparing:', key, varietyIdStr, key === varietyIdStr);
+            if (key === varietyIdStr) {
+                varietyData = varietiesData2[key];
+                console.log('Found by iteration with key:', key);
+                break;
+            }
+        }
+        
+        // If still not found, try to find a variety with the same ID in allVarieties
+        if (!varietyData && Array.isArray(allVarieties)) {
+            const variety = allVarieties.find(v => String(v.id) === varietyIdStr);
+            if (variety) {
+                console.log('Found variety in allVarieties:', variety);
+            }
+        }
+    }
+    
+    console.log('Variety data for ID', varietyIdStr, ':', varietyData);
+    
+    // update the outside planting date, inside planting date, and harvest date
+    setAllPlantingDates(varietyData.spring_frost_date, varietyId);
+}
+
+function setAllPlantingDates(springFrostDate, varietyId) {
+    // how can i tell if the form is being created vs editted
+    console.log("springFrostDate: ",springFrostDate);
+    console.log("VarietyID: ", varietyId)
+
+    if (!springFrostDate || !varietyId || !varietiesData2[varietyId]) return;
+
+    const variety = varietiesData2[varietyId];
+
+    const insideDateInput = document.getElementById('inside_planting_date');
+    const outsideDateInput = document.getElementById('outside_planting_date');
+    const harvestDateInput = document.getElementById('harvest_date');
+
+    outsideDateObj = new Date(springFrostDate);
+    console.log("outsideDateObj: ", outsideDateObj)
+    outsideDateObj.setDate(outsideDateObj.getDate() + parseInt(variety.days_from_frost_to_transplant));
+    console.log("outsideDateObj: ", outsideDateObj)
+    outsideDateInput.value = formatDateToMMDDYYYY(outsideDateObj);
+    // Refresh the datepicker to show the new date
+    $(outsideDateInput).datepicker('update');
+
+    harvestDateObj = new Date(outsideDateObj);
+    harvestDateObj.setDate(outsideDateObj.getDate() + parseInt(variety.days_to_maturity));
+    harvestDateInput.value = formatDateToMMDDYYYY(harvestDateObj);
+    // Refresh the datepicker to show the new date
+    $(harvestDateInput).datepicker('update');
+
+    // For transplants, calculate inside planting date
+    if (variety.planting_method === 'TRANSPLANT' && variety.days_from_seed_to_transplant && outsideDateObj) {
+        insideDateObj = new Date(outsideDateObj);
+        insideDateObj.setDate(outsideDateObj.getDate() - parseInt(variety.days_from_seed_to_transplant));
+        insideDateInput.value = formatDateToMMDDYYYY(insideDateObj);
+        // Refresh the datepicker to show the new date
+        $(insideDateInput).datepicker('update');
+    }
+}
+
+// Helper function to format Date object to MM/DD/YYYY string
+function formatDateToMMDDYYYY(date) {
+    if (!date || isNaN(date.getTime())) return '';
+    
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const year = date.getFullYear();
+    
+    return `${month}/${day}/${year}`;
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     // Form validation
@@ -376,7 +473,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Calculate outside planting date based on days to maturity
         if (variety.days_to_maturity) {
             outsideDateObj = new Date(harvestDateObj);
-            outsideDateObj.setDate(harvestDateObj.getDate() - variety.days_to_maturity);
+            outsideDateObj.setDate(harvestDateObj.getDate() - parseInt(variety.days_to_maturity));
             outsideDateInput.value = formatDateToMMDDYYYY(outsideDateObj);
             // Refresh the datepicker to show the new date
             $(outsideDateInput).datepicker('update');
@@ -385,13 +482,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // For transplants, calculate inside planting date
         if (variety.planting_method === 'TRANSPLANT' && variety.days_from_seed_to_transplant && outsideDateObj) {
             insideDateObj = new Date(outsideDateObj);
-            insideDateObj.setDate(outsideDateObj.getDate() - variety.days_from_seed_to_transplant);
+            insideDateObj.setDate(outsideDateObj.getDate() - parseInt(variety.days_from_seed_to_transplant));
             insideDateInput.value = formatDateToMMDDYYYY(insideDateObj);
             // Refresh the datepicker to show the new date
             $(insideDateInput).datepicker('update');
         }
     }
-    
+
     // Helper function to parse MM/DD/YYYY date string to Date object
     function parseDate(dateString) {
         if (!dateString) return null;
@@ -558,7 +655,13 @@ document.addEventListener('DOMContentLoaded', function() {
             (varietyData.earliest_outside_planting_date !== undefined) ? varietyData.earliest_outside_planting_date : '--';
         document.getElementById('planting-method').textContent = 
             (varietyData.planting_method !== undefined) ? "Planting Method: " + varietyData.planting_method : '--';
+        
+        // update the outside planting date, inside planting date, and harvest date
+        //(varietyData.spring_frost_date, varietyId);
     }
+
+
+
     
     // Initialize variety info if a variety is already selected
     if (varietySelect.value) {
