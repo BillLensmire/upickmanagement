@@ -103,7 +103,7 @@ class PlantCreateView(LoginRequiredMixin, CreateView):
         'days_to_germinate', 'days_to_maturity',
         'days_from_seed_to_transplant', 'days_from_frost_to_transplant',
         'height_inches', 'is_perennial',
-        'companion_plants', 'research_notes'
+        'companion_plants', 'research_notes', 'number_of_harvest_days'
     ]
 
     def form_valid(self, form):
@@ -139,7 +139,7 @@ class PlantUpdateView(LoginRequiredMixin, UpdateView):
         'days_to_germinate', 'days_to_maturity',
         'days_from_seed_to_transplant', 'days_from_frost_to_transplant',
         'height_inches', 'is_perennial',
-        'companion_plants', 'research_notes'
+        'companion_plants', 'research_notes', 'number_of_harvest_days'
     ]
 
     def get_success_url(self):
@@ -267,7 +267,7 @@ class VarietyUpdateView(LoginRequiredMixin, UpdateView):
         'variety_plant', 'variety_name', 'scientific_name', 'variety_description',
         'variety_planting_method', 'variety_spacing_between_plants', 'variety_spacing_between_rows',
         'variety_days_to_maturity', 'variety_days_from_seed_to_transplant',
-        'variety_days_from_frost_to_transplant', 'variety_planting_season'
+        'variety_days_from_frost_to_transplant', 'variety_planting_season', 'number_of_harvest_days'
     ]
 
     def get_success_url(self):
@@ -328,7 +328,7 @@ class PlantVarietyCreateView(LoginRequiredMixin, CreateView):
         'variety_name', 'scientific_name', 'variety_description',
         'variety_planting_method', 'variety_spacing_between_plants', 'variety_spacing_between_rows',
         'variety_days_to_maturity', 'variety_days_from_seed_to_transplant',
-        'variety_days_from_frost_to_transplant', 'variety_planting_season'
+        'variety_days_from_frost_to_transplant', 'variety_planting_season', 'number_of_harvest_days'
     ]
     
     def get_success_url(self):
@@ -345,6 +345,7 @@ class PlantVarietyCreateView(LoginRequiredMixin, CreateView):
         form.initial['variety_days_to_maturity'] = plant.days_to_maturity
         form.initial['variety_days_from_seed_to_transplant'] = plant.days_from_seed_to_transplant
         form.initial['variety_days_from_frost_to_transplant'] = plant.days_from_frost_to_transplant
+        form.initial['number_of_harvest_days'] = plant.number_of_harvest_days
         
         return form
     

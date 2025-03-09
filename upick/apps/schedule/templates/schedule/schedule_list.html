@@ -9,6 +9,7 @@
             <h1>Planting Schedule</h1>
         </div>
         <div class="col-md-4 text-end">
+            <a href="{% url 'produceplanner:produce_availability_report' overview_id %}" class="btn btn-sm btn-outline-info">Report</a>
             <a href="{% url 'schedule:create' %}{% if selected_year %}?year={{ selected_year }}{% endif %}" class="btn btn-success">
                 <i class="fas fa-plus"></i> New Planting Schedule Entry
             </a>

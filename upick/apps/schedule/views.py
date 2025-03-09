@@ -349,14 +349,14 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
         kwargs['request'] = self.request
         
         # Get selected year from query parameters or use current year
-        produceplanid = self.request.GET.get('produceplanid')
-        if produceplanid:
-            kwargs['produceplanid'] = produceplanid
+        produceplanoverviewid = self.request.GET.get('produceplanoverviewid')
+        if produceplanoverviewid:
+            kwargs['produceplanoverviewid'] = produceplanoverviewid
         return kwargs
     
     def get_success_url(self):
-        if self.request.GET.get('produceplanid'):
-            return reverse_lazy('schedule:view_planning_schedule', kwargs={'pk': self.request.GET.get('produceplanid')})
+        if self.request.GET.get('produceplanoverviewid'):
+            return reverse_lazy('schedule:view_planning_schedule', kwargs={'pk': self.request.GET.get('produceplanoverviewid')})
         return reverse_lazy('schedule:detail', kwargs={'schedule_id': self.object.id})
     
     def form_valid(self, form):
@@ -417,7 +417,7 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
             group__in=self.request.user.groups.all()
         ).order_by('-year', 'name')
 
-        selectedproduce_plan = ProducePlanOverview.objects.filter(id=self.request.GET.get('produceplanid')).first()
+        selectedproduce_plan = ProducePlanOverview.objects.filter(id=self.request.GET.get('produceplanoverviewid')).first()
         
         # Prepare JSON data for JavaScript
         produce_plans_json = [{'id': plan.id, 'year': plan.year, 'name': plan.name} for plan in produce_plans]
@@ -465,7 +465,9 @@ class ScheduleCreateView(LoginRequiredMixin, CreateView):
         # Convert varieties_data to JSON for JavaScript using the custom encoder and helper function
         varieties_data_json = safe_json_dumps(varieties_data)
         
+        produceplanoverviewid = self.request.GET.get('produceplanoverviewid')
         context.update({
+            'produceplanoverviewid': produceplanoverviewid,
             'selectedproduce_plan': selectedproduce_plan,
             'spring_frost_date': garden_config.spring_frost_date,
             'fall_frost_date': garden_config.fall_frost_date,
@@ -507,8 +509,9 @@ def schedule_duplicate(request, schedule_id):
         y_position=original_schedule.y_position
     )
     
+    produceplanoverviewid = request.GET.get('produceplanoverviewid')
     messages.success(request, f'Successfully duplicated planting schedule for {original_schedule.variety.variety_name}')
-    return redirect('schedule:edit', schedule_id=new_schedule.id)
+    return redirect('schedule:view_planning_schedule', produceplanoverviewid) 
 
 class ScheduleUpdateView(LoginRequiredMixin, UpdateView):
     """Class-based view for editing an existing planting schedule."""
@@ -536,12 +539,12 @@ class ScheduleUpdateView(LoginRequiredMixin, UpdateView):
         else:
             selected_year = datetime.now().year
             
-        kwargs['selected_year'] = selected_year
+        #kwargs['selected_year'] = selected_year
         return kwargs
     
     def get_success_url(self):
         """Redirect to the schedule detail page."""
-        return reverse_lazy('schedule:detail', kwargs={'schedule_id': self.object.id})
+        return reverse_lazy('schedule:view_planning_schedule', kwargs={'pk': self.request.GET.get('produceplanoverviewid')})
     
     def form_valid(self, form):
         """Process the form data and save the schedule."""
@@ -650,7 +653,11 @@ class ScheduleUpdateView(LoginRequiredMixin, UpdateView):
         #print(f"JSON type: {type(varieties_data_json)}")
         #print(f"JSON sample: {varieties_data_json[:100]}...")
         
+        selectedproduce_plan = ProducePlanOverview.objects.filter(id=self.request.GET.get('produceplanoverviewid')).first()
+        produceplanoverviewid = self.request.GET.get('produceplanoverviewid')
         context.update({
+            'produceplanoverviewid': produceplanoverviewid,
+            'selectedproduce_plan': selectedproduce_plan,
             'garden_beds': garden_beds,
             'produce_plans': produce_plans,
             'varieties': varieties,
@@ -1277,4 +1284,15 @@ def export_calendar_pdf(request):
 class ScheduleDeleteView(DeleteView):
     model = PlantingSchedule
     template_name = 'schedule/schedule_confirm_delete.html'
-    success_url = reverse_lazy('schedule:list')
+
+    def get_success_url(self):
+        produceplanoverviewid = self.request.GET.get('produceplanoverviewid')
+        return reverse_lazy('schedule:view_planning_schedule', kwargs={'pk': self.request.GET.get('produceplanoverviewid')})
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        produceplanoverviewid = self.request.GET.get('produceplanoverviewid')
+        context.update({
+            'produceplanoverviewid': produceplanoverviewid,
+        })
+        return context

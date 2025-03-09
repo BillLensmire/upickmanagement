@@ -77,6 +77,7 @@ class Plant(models.Model):
         null=True,
         blank=True
     )
+    number_of_harvest_days = models.IntegerField(default=60,help_text="Number of expected days to harvest this produce.")
     
     # Plant characteristics
     height_inches = models.IntegerField(help_text="Average height at maturity in inches")
@@ -153,6 +154,7 @@ class Variety(models.Model):
         null=True,
         blank=True
     )
+    number_of_harvest_days = models.IntegerField(default=60,help_text="Number of expected days to harvest this produce.")
     # Seasonal timing
     variety_planting_season = models.CharField(
         max_length=20,

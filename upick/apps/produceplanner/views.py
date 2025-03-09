@@ -12,6 +12,7 @@ from .models import ProducePlanOverview, ProducePlan, Plant
 from apps.plants.models import Plant, Variety
 from apps.planning.models import GardenConfiguration
 from .forms import ProducePlanOverviewForm, ProducePlanForm
+from apps.schedule.models import PlantingSchedule
 
 def get_user_group(request):
     """Get the user's active group or return None if user has no groups.
@@ -25,10 +26,12 @@ def get_user_group(request):
 @login_required
 def produce_availability_report(request, overview_id):
     overview = get_object_or_404(ProducePlanOverview, id=overview_id, group__in=request.user.groups.all())
-    # Get only plants that have entries in this produce plan overview
-    plants_with_produce_plans = Plant.objects.filter(produceplan__produce_plan_overview=overview).distinct()
-    produce_plans = ProducePlan.objects.filter(produce_plan_overview=overview)
+    #get the PlantingSchedules from the overview
+    planting_schedules = PlantingSchedule.objects.filter(produce_plan=overview)
 
+    # Get only plants that have entries in the PlantingSchedules
+    varieties_with_schedules = PlantingSchedule.objects.filter(produce_plan=overview).values_list('variety', flat=True).distinct()
+    
     # Find the first Sunday before or on the start date
     start_date = overview.overall_start_date
     days_to_sunday = start_date.weekday() + 1  # weekday() returns 0-6 (Mon-Sun), so add 1 to get days until previous Sunday
@@ -49,72 +52,25 @@ def produce_availability_report(request, overview_id):
     # Create a matrix with plants/varieties as rows and weeks as columns
     plant_matrix = []
     
-    # First add plants without varieties
-    for plant in plants_with_produce_plans:
-        # Check if this plant has varieties with produce plans
-        plant_varieties = Variety.objects.filter(variety_plant=plant)
-        varieties_with_plans = False
-        
-        for variety in plant_varieties:
-            # Check if any produce plans exist for this variety
-            variety_plans_exist = produce_plans.filter(
-                plant=plant,
-                variety=variety
-            ).exists()
-            
-            if variety_plans_exist:
-                varieties_with_plans = True
-                break
-        
-        # If this plant has no varieties with plans, or no varieties at all, add it as a standalone plant
-        if not varieties_with_plans:
-            row = {
-                'plant': plant.name,
-                'plant_id': plant.id,
-                'variety_id': None,
-                'availability': []
-            }
-
-            # For each week, check if the plant is available
-            for week in date_ranges:
-                is_available = produce_plans.filter(
-                    plant=plant,
-                    variety__isnull=True
-                ).exists()
-                row['availability'].append(is_available)
-
-            plant_matrix.append(row)
-    
     # Now add plants with varieties
-    for plant in plants_with_produce_plans:
-        plant_varieties = Variety.objects.filter(variety_plant=plant)
-        
-        for variety in plant_varieties:
-            # Check if any produce plans exist for this variety
-            variety_plans_exist = produce_plans.filter(
-                plant=plant,
-                variety=variety
-            ).exists()
-            
-            if variety_plans_exist:
-                row = {
-                    'plant': f"{plant.name} ({variety.variety_name})",
-                    'plant_id': plant.id,
-                    'variety_id': variety.id,
-                    'availability': []
-                }
+    for schedule in planting_schedules:
+        variety = schedule.variety
+        plant = variety.variety_plant
+        row = {
+            'plant': f"{plant.name} ({variety.variety_name})",
+            'plant_id': plant.id,
+            'variety_id': variety.id,
+            'availability': []
+        }
 
-                # For each week, check if the variety is available
-                for week in date_ranges:
-                    is_available = produce_plans.filter(
-                        plant=plant,
-                        variety=variety,
-                        produce_plan_overview__overall_start_date__lte=week['date'] + timedelta(days=6),
-                        produce_plan_overview__overall_end_date__gte=week['date']
-                    ).exists()
-                    row['availability'].append(is_available)
+        # For each week, check if the variety is available
+        for week in date_ranges:
+            variety_start_date = schedule.harvest_date
+            variety_end_date = schedule.harvest_date + timedelta(days=variety.variety_days_to_maturity)
+            is_available = variety_start_date <= week['date'] <= variety_end_date
+            row['availability'].append(is_available)
 
-                plant_matrix.append(row)
+        plant_matrix.append(row)
 
     context = {
         'overview': overview,

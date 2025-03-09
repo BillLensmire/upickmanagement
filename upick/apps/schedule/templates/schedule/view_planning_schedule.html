@@ -2,12 +2,22 @@
 {% block title %}Planting Schedule - You Pick Manager{% endblock %}
 {% block content %}
 <div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'produceplanner:overview_list' %}">Produce Plans</a></li>
+            <li class="breadcrumb-item active">Planting Schedule</li>
+        </ol>
+    </nav>
     <div class="row mb-4">
         <div class="col-md-8">
             <h1>Planting Schedule for {{ produceplan.name }}</h1>
+            <small class="text-muted">Harvest Window: {{ produceplan.overall_start_date }} - {{ produceplan.overall_end_date }}</small>
         </div>
         <div class="col-md-4 text-end">
-            <a href="{% url 'schedule:create' %}?produceplanid={{ produceplan.id }}" class="btn btn-success">
+            <a href="{% url 'produceplanner:produce_availability_report' produceplan.id %}" class="btn btn-info">
+                <i class="fas fa-info"></i> Harvest Availability
+            </a>
+            <a href="{% url 'schedule:create' %}?produceplanoverviewid={{ produceplan.id }}" class="btn btn-success">
                 <i class="fas fa-plus"></i> New Planting Schedule Entry
             </a>
         </div>
@@ -53,13 +63,13 @@
                             <td>{{ schedule.outside_planting_date|default:"-" }}</td>
                             <td>{{ schedule.harvest_date|default:"-" }}</td>
                             <td>
-                                <a href="{% url 'schedule:edit' schedule.id %}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                <a href="{% url 'schedule:edit' schedule.id %}?produceplanoverviewid={{ produceplan.id }}" class="btn btn-sm btn-outline-primary" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <a href="{% url 'schedule:duplicate' schedule.id %}" class="btn btn-sm btn-outline-secondary" title="Duplicate">
+                                <a href="{% url 'schedule:duplicate' schedule.id %}?produceplanoverviewid={{ produceplan.id }}" class="btn btn-sm btn-outline-secondary" title="Duplicate">
                                     <i class="fas fa-copy"></i>
                                 </a>
-                                <a href="{% url 'schedule:delete' schedule.id %}" class="btn btn-sm btn-outline-danger" title="Delete" onclick="return confirm('Are you sure you want to delete this schedule?')">
+                                <a href="{% url 'schedule:delete' schedule.id %}?produceplanoverviewid={{ produceplan.id }}" class="btn btn-sm btn-outline-danger" title="Delete">
                                     <i class="fas fa-trash"></i>
                                 </a>
                             </td>

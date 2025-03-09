@@ -149,7 +149,7 @@ class PlantingScheduleForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
-        self.produceplanid = kwargs.pop('produceplanid', None)
+        self.produceplanoverviewid = kwargs.pop('produceplanoverviewid', None)
         super().__init__(*args, **kwargs)
         
         if self.request and self.request.user.groups.exists():

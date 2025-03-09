@@ -7,7 +7,7 @@
 <div class="container">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'schedule:list' %}">Schedule</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'schedule:view_planning_schedule' produceplanoverviewid %}">Planting Schedule</a></li>
             <li class="breadcrumb-item active">{% if schedule %}Edit{% else %}Create{% endif %} Schedule</li>
         </ol>
     </nav>
@@ -218,7 +218,7 @@
                         </div>
 
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a href="{% url 'schedule:list' %}" class="btn btn-secondary me-md-2">Cancel</a>
+                            <a href="{% url 'schedule:view_planning_schedule' produceplanoverviewid %}" class="btn btn-secondary me-md-2">Cancel</a>
                             <button type="submit" class="btn btn-primary">Save</button>
                         </div>
                     </form>

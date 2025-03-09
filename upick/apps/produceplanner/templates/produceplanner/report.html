@@ -49,10 +49,10 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{% url 'produceplanner:overview_list' %}">Produce Plans</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'produceplanner:overview_detail' overview.id %}">{{ overview.name }}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'schedule:view_planning_schedule' overview.id %}">Produce Schedule</a></li>
             <li class="breadcrumb-item active">Produce Availability Report</li>
         </ol>
-    </nav>
+    </nav> 
 
     <div class="row mb-4">
         <div class="col-md-12">
