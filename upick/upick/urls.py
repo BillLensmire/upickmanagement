@@ -20,9 +20,12 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.conf.urls.static import static
 from .views import HomeView
+from apps.authentication import views as authentication_views
+from django.views.generic import TemplateView
 
 urlpatterns = [
-    path('', login_required(HomeView.as_view()), name='home'),
+    path('', authentication_views.login_view, name='login'),
+    path('home/', login_required(HomeView.as_view()), name='home'),
     path('admin/', admin.site.urls),
     path('auth/', include(('apps.authentication.urls', 'authentication'), namespace='authentication')),
     path('schedule/', include(('apps.schedule.urls', 'schedule'), namespace='schedule')),
@@ -36,6 +39,7 @@ urlpatterns = [
     path('reminders/', include(('apps.reminders.urls', 'reminders'), namespace='reminders')),
     path('minerals/', include(('apps.minerals.urls', 'minerals'), namespace='minerals')),
     path('help/', include(('apps.help.urls', 'help'), namespace='help')),
+    path('app-description', TemplateView.as_view(template_name='app_description.html'), name='app_description'),
 ]
 
 # Serve media files during development

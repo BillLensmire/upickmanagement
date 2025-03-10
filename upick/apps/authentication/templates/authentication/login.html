@@ -6,20 +6,26 @@
 {% block content %}
 <div class="container">
     <div class="row justify-content-center">
+        <div class="row">
+            <div class="col-md-12 text-center">
+                <h1 class="display-4">Welcome to You Pick Manager</h1>
+            </div>
+            <div class="card mt-1">
+                <div class="card-body text-center">
+                    <p class="card-text">The Greatest App for planning, managing, and tracking your U Pick Market Garden</p>
+                    <p class="card-text">Written by Bill Lensmire.  Free Open Source Software. Freely you received, freely give.</p>
+                    <p class="card-text">** This app is currently in development and is not yet ready for production use. **<br>
+                        My target is to have it ready by the end of 2025 for the 2026 growing season.</p>
+                    <a href="{% url 'app_description' %}" target="_blank" class="link">Tap here to learn more about how this app can help you manage your U Pick Market Garden</a>
+                </div>
+            </div>
+        </div>
         <div class="col-md-6 col-lg-4">
             <div class="card mt-5">
                 <div class="card-header">
-                    <h4 class="mb-0">Login</h4>
+                    <h4 class="mb-0">You Pick Manager Login</h4>
                 </div>
-                <div class="card-body">
-                    {% if messages %}
-                        {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }}">
-                                {{ message }}
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                    
+                <div class="card-body">                    
                     <form method="post" class="needs-validation" novalidate>
                         {% csrf_token %}
                         <div class="mb-3">

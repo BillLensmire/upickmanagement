@@ -21,7 +21,7 @@ def get_user_group(request):
         return None
     return request.user.groups.first()
 
-class PlantListView(ListView):
+class PlantListView(LoginRequiredMixin, ListView):
     model = Plant
     template_name = 'plants/plant_list.html'
     context_object_name = 'plants'
@@ -37,7 +37,7 @@ class PlantListView(ListView):
         context['page_action'] = 'list'
         return context
 
-class PlantDetailView(DetailView):
+class PlantDetailView(LoginRequiredMixin, DetailView):
     model = Plant
     template_name = 'plants/plant_detail.html'
     context_object_name = 'plant'
@@ -54,7 +54,7 @@ class PlantDetailView(DetailView):
         context['next_plant'] = next_plant if next_plant else Plant.objects.order_by('name').first()
         return context
 
-class PlantSearchView(ListView):
+class PlantSearchView(LoginRequiredMixin, ListView):
     model = Plant
     template_name = 'plants/plant_list.html'
     context_object_name = 'plants'
@@ -170,7 +170,7 @@ class PlantDeleteView(LoginRequiredMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-class VarietyListView(ListView):
+class VarietyListView(LoginRequiredMixin, ListView):
     model = Variety
     template_name = 'plants/variety_list.html'
     context_object_name = 'varieties'
@@ -186,7 +186,7 @@ class VarietyListView(ListView):
         context['page_action'] = 'list'
         return context
 
-class VarietyDetailView(DetailView):
+class VarietyDetailView(LoginRequiredMixin, DetailView):
     model = Variety
     template_name = 'plants/variety_detail.html'
     context_object_name = 'variety'
@@ -201,7 +201,7 @@ class VarietyDetailView(DetailView):
         context['page_action'] = 'detail'
         return context
 
-class VarietySearchView(ListView):
+class VarietySearchView(LoginRequiredMixin, ListView):
     model = Variety
     template_name = 'plants/variety_list.html'
     context_object_name = 'varieties'
